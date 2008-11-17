@@ -8,6 +8,66 @@ using System.Windows.Forms;
 
 namespace MidasGenModel.model
 {
+    #region Model Info(模型特性类)
+
+    /// <summary>
+    /// 模型单位信息
+    /// </summary>
+    public class BUNIT
+    {
+        private string _Force;
+        private string _Length;
+        private string _Heat;
+        private string _Temper;
+
+        /// <summary>
+        /// 力的单位：N、KN等
+        /// </summary>
+        public string Force
+        {
+            set { _Force = value; }
+            get { return _Force; }
+        }
+
+        /// <summary>
+        /// 长度单位：m、mm等
+        /// </summary>
+        public string Length
+        {
+            set { _Length = value; }
+            get { return _Length; }
+        }
+
+        /// <summary>
+        /// 热量单位：kJ等
+        /// </summary>
+        public string Heat
+        {
+            set { _Heat = value; }
+            get { return _Heat; }
+        }
+
+        /// <summary>
+        /// 温度单位：C等
+        /// </summary>
+        public string Temper
+        {
+            set { _Temper = value; }
+            get { return _Temper; }
+        }
+
+        /// <summary>
+        /// 默认构造函数
+        /// </summary>
+        public BUNIT()
+        {
+            _Force = "N";
+            _Length = "M";
+            _Heat = "KJ";
+            _Temper = "C";
+        }
+    }
+    #endregion
     #region Load Class(荷载类)
 
     /// <summary>
@@ -1265,6 +1325,10 @@ namespace MidasGenModel.model
     {
         #region 成员
         /// <summary>
+        /// 单位系统
+        /// </summary>
+        public BUNIT unit;
+        /// <summary>
         /// 节点信息列表
         /// </summary>
         public SortedList<int, Bnodes> nodes;
@@ -1312,6 +1376,8 @@ namespace MidasGenModel.model
         /// </summary>
         public Bmodel()
         {
+            unit = new BUNIT();
+
             nodes = new SortedList<int, Bnodes>();
             elements = new SortedList<int, Element>();
             sections = new SortedList<int, BSections>();
@@ -1448,6 +1514,7 @@ namespace MidasGenModel.model
                 {
                     sec.SEC_Data[6] = sec.SEC_Data[4];
                 }
+                //todo:当输入截面为数据库截面时，进行截面参数转化
             }
         }
 
@@ -1525,6 +1592,24 @@ namespace MidasGenModel.model
                     }
                     currentdata = line;//得到当前数据内容
                 }
+                #region 模型信息读取
+                else if (line.StartsWith(" ") == true && currentdata == "*UNIT")
+                {
+                    line.Trim();//修剪开头空格
+                    temp = line.Split(',');
+                    try
+                    {
+                        unit.Force = temp[0].Trim().ToUpper();
+                        unit.Length = temp[1].Trim().ToUpper();
+                        unit.Heat = temp[2].Trim().ToUpper();
+                        unit.Temper = temp[3].Trim().ToUpper();
+                    }
+                    catch (Exception e)
+                    {
+                        throw new Exception(e.Message);
+                    }
+                }
+                #endregion
                 #region 节点数据读取
                 else if (line.StartsWith(" ") == true && currentdata == "*NODE")
                 {
