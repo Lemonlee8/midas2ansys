@@ -1,5 +1,5 @@
 #labels Phase-Design
-#软件主要更新记录
+# 软件主要更新记录.
 
 = Introduction =
 
