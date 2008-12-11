@@ -1,14 +1,22 @@
 #labels Phase-Design
 # 软件主要更新记录.
 
-= Introduction =
+==Midas2ANSYS_V1.0.0.17==
 
-Add your content here.
+ # 支持MIDAS中Beam单元的转化，输出ANSYS时可选Beam44,Beam188和Beam189；
+ # MIDAS中的单元Beta角自动转化为ANSYS中的单元keypoint；
+ # 支持MIDAS中用户自定义截面（H型、T型、圆型、矩型、箱型）的转化；
+ # 支持MIDAS中“一般约束”边界条件的转化。
 
+==待开发功能==
 
-= Details =
+ # ~~MIDAS中节点荷载转换~~；
+ # 对MIDAS中Cable单元的支持；
+ # ~~对MIDAS中板单元的支持~~；
+ # ~~支持荷载工况的自动转换~~；
+ # ANSYS材料模型数据的智能输出；
+ # ~~支持Midas中自重信息的自动转换~~；
+ # ~~支持单元局部坐标系下线形分布梁单元荷载的转换~~；（对于多线性梁单元荷载需要在ansys中对梁单元进行细分）
+ # 支持单元局部坐标系下单一集中梁单元荷载的转换；
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+(*注*：画线功能已在现有源代码中实现)
