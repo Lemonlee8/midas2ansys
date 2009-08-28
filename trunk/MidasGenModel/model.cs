@@ -1395,7 +1395,7 @@ namespace MidasGenModel.model
         /// </summary>
         public void GenBeamKpoint()
         {
-            int Nnodes = 9999;//模型节点数基数，用于方向点的起始编号
+            int Nnodes = 99999;//模型节点数基数，用于方向点的起始编号
             int i = 1;
             foreach (Element elee in this.elements.Values)
             {
