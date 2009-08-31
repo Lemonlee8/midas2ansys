@@ -1649,9 +1649,11 @@ namespace MidasGenModel.model
                         switch (temp[1].Trim().ToUpper())
                         {
                             case "BEAM":
-                                tempDoublt1 = double.Parse(temp[6], System.Globalization.NumberStyles.Number);
+                                tempDoublt1 = double.Parse(temp[6], System.Globalization.NumberStyles.Float);
                                 FrameElement elemdata = new FrameElement(
                                     tempInt, "BEAM", tempInt1, tempInt2, tempInt3, tempInt4);
+                                if (Math.Abs(tempDoublt1) <= 0.0001)//如果读入角度非常小，近似认为方向角为0
+                                    tempDoublt1 = 0;
                                 elemdata.beta = tempDoublt1;//记录单元方向角
                                 elements.Add(tempInt, elemdata);
                                 break;
