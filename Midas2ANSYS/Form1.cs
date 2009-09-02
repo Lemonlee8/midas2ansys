@@ -24,7 +24,7 @@ namespace Midas2ANSYS
         {
             OpenFileDialog OPD = new OpenFileDialog();
             OPD.Title = "打开Midas命令流文件";
-            OPD.InitialDirectory = "c:\\";
+            OPD.InitialDirectory = Directory.GetCurrentDirectory();
             OPD.Filter = "mgt 文件(*.mgt)|*.mgt|All files (*.*)|*.*";
             //OPD.FilterIndex = 2;
             OPD.RestoreDirectory = true;
@@ -38,7 +38,7 @@ namespace Midas2ANSYS
         {
             SaveFileDialog SPD = new SaveFileDialog();
             SPD.Title = "选择ANSYS命令流路径";
-            SPD.InitialDirectory = "c:\\";
+            SPD.InitialDirectory = Directory.GetCurrentDirectory();
             SPD.Filter = "inp 文件(*.inp)|*.inp|All files (*.*)|*.*";
             if (SPD.ShowDialog() == DialogResult.OK)
             {
