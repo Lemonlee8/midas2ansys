@@ -1055,18 +1055,19 @@ namespace MidasGenModel.model
     }
 
     /// <summary>
-    /// 存储截面特性的类
+    /// 存储截面特性的基类
     /// </summary>
-    public class BSections
+    public abstract class BSections
     {
         /// <summary>
         /// 截面号
         /// </summary>
         private int iSEC;
         /// <summary>
-        /// 截面类型：DBUSER或VALU
+        /// 截面类型：枚举
         /// </summary>
-        public string TYPE;
+       // public string TYPE;
+        public SecType TYPE;
         /// <summary>
         /// 截面名称
         /// </summary>
@@ -1076,13 +1077,13 @@ namespace MidasGenModel.model
         /// </summary>
         public ArrayList OFFSET;
         /// <summary>
-        /// 截面偏心数据
+        /// 是否考虑剪切变形
         /// </summary>
         public bool bsd;
         /// <summary>
         /// 截面形状：B表示箱形
         /// </summary>
-        public string SSHAPE;
+        public SecShape SSHAPE;
         /// <summary>
         /// 截面数据信息
         /// </summary>
@@ -1106,10 +1107,13 @@ namespace MidasGenModel.model
             set { iSEC = value; }
         }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
         public BSections()
         {
             iSEC = 1;
-            TYPE = "DBUSER";
+            TYPE = SecType.DBUSER;
             SNAME = "No Name";
 
             OFFSET = new ArrayList(7);
@@ -1122,7 +1126,7 @@ namespace MidasGenModel.model
             OFFSET.Add(0);
 
             bsd = true;
-            SSHAPE = "P";
+            SSHAPE = SecShape.P;
 
             SEC_Data = new ArrayList();
             SEC_Data.Add(1);
@@ -1132,49 +1136,108 @@ namespace MidasGenModel.model
         /// <summary>
         /// 按一定格式输出截面数据信息
         /// </summary>
-        /// <returns></returns>
-        public string WriteData()
+        /// <returns>ansys命令流字符串</returns>
+        public abstract string WriteData();
+
+    }
+
+    /// <summary>
+    /// 常用截面信息类
+    /// </summary>
+    public class SectionDBuser : BSections
+    {
+        /// <summary>
+        /// 重载输出ansys 命令流函数
+        /// </summary>
+        /// <returns>ansys命令流</returns>
+        public override string WriteData()
         {
+            //throw new NotImplementedException();
             string res = null;
-            if (this.SSHAPE.Trim() == "B" && (int)this.SEC_Data[0] == 2)//箱形截面
+            if (this.SSHAPE == SecShape.B && (int)this.SEC_Data[0] == 2)//箱形截面
             {
                 res += "sectype," + this.Num.ToString() + ",beam,hrec," + this.Name;
                 res += "\nsecdata," + SEC_Data[2].ToString() + "," + SEC_Data[1].ToString() + "," + SEC_Data[3].ToString() + "," + SEC_Data[3].ToString()
                 + "," + SEC_Data[6].ToString() + "," + SEC_Data[4].ToString();
             }
-            else if (this.SSHAPE.Trim() == "H" && (int)this.SEC_Data[0] == 2)//H型截面
+            else if (this.SSHAPE== SecShape.H && (int)this.SEC_Data[0] == 2)//H型截面
             {
                 res += "sectype," + this.Num.ToString() + ",beam,i," + this.Name;
                 res += "\nsecdata," + SEC_Data[2].ToString() + "," + SEC_Data[2].ToString() + "," + SEC_Data[1].ToString() + "," + SEC_Data[4].ToString()
                     + "," + SEC_Data[4].ToString() + "," + SEC_Data[3].ToString();
             }
-            else if (this.SSHAPE.Trim() == "P" && (int)this.SEC_Data[0] == 2)//圆管截面
+            else if (this.SSHAPE == SecShape.P && (int)this.SEC_Data[0] == 2)//圆管截面
             {
                 double ri = (double)SEC_Data[1] / 2 - (double)SEC_Data[2];
                 double ro = (double)SEC_Data[1] / 2;
                 res += "sectype," + this.Num.ToString() + ",beam,ctube," + this.Name;
                 res += "\nsecdata," + ri.ToString() + "," + ro.ToString();
             }
-            else if (this.SSHAPE.Trim() == "SB" && (int)this.SEC_Data[0] == 2)//矩形截面
+            else if (this.SSHAPE==SecShape .SB&& (int)this.SEC_Data[0] == 2)//矩形截面
             {
                 res += "sectype," + this.Num.ToString() + ",beam,rect," + this.Name;
                 res += "\nsecdata," + SEC_Data[2].ToString() + "," + SEC_Data[1].ToString();
             }
-            else if (this.SSHAPE.Trim() == "T" && (int)this.SEC_Data[0] == 2)//T型截面
+            else if (this.SSHAPE== SecShape .T&& (int)this.SEC_Data[0] == 2)//T型截面
             {
-                res += "sectype," + this.Num.ToString() + ",beamr,t," + this.Name;
+                res += "sectype," + this.Num.ToString() + ",beam,t," + this.Name;
                 res += "\nsecdata," + SEC_Data[1].ToString() + "," + SEC_Data[2].ToString() + "," + SEC_Data[3].ToString() + "," +
                     SEC_Data[4].ToString();
             }
-            else if (this.SSHAPE.Trim() == "SR" && (int)this.SEC_Data[0] == 2)//圆形截面
+            else if (this.SSHAPE==SecShape.SR && (int)this.SEC_Data[0] == 2)//圆形截面
             {
-                res += "sectype," + this.Num.ToString() + ",beamr,csolid," + this.Name;
+                res += "sectype," + this.Num.ToString() + ",beam,csolid," + this.Name;
                 res += "\nsecdata," + ((double)SEC_Data[1] / 2).ToString();
+            }
+            else if (this.SSHAPE==SecShape.C&& (int)this.SEC_Data[0]==2)//槽钢截面
+            {
+                res += "sectype," + this.Num.ToString() + ",beam,chan," + this.Name;
+                res += "\nsecdata," + SEC_Data[5].ToString() + "," + SEC_Data[2].ToString() + "," + SEC_Data[1].ToString() + "," +
+                    SEC_Data[6].ToString() + "," + SEC_Data[4].ToString() + "," + SEC_Data[3].ToString();
             }
             else
             {
-                res += "!以下截面形状信息未处理：" + SSHAPE;
+                res += "!此截面形状信息未处理：" + this.Num.ToString();
             }
+            return res;
+        }
+    }
+
+    /// <summary>
+    /// 渐变截面信息类
+    /// </summary>
+    public class SectionTapered : BSections
+    {
+        /// <summary>
+        /// 考虑单元坐标系y轴截面弯矩的方法
+        /// </summary>
+        public iVAR iyVAR;
+        /// <summary>
+        /// 考虑单元坐标系z轴截面弯矩的方法
+        /// </summary>
+        public iVAR izVAR;
+
+        /// <summary>
+        /// 子截面输入类型
+        /// </summary>
+        public STYPE SubTYPE;
+        
+        /// <summary>
+        /// 不带参数的构造函数
+        /// </summary>
+        public SectionTapered()
+            : base()
+        {
+            this.TYPE = SecType.TAPERED;
+            iyVAR = iVAR.Linear;
+            izVAR = iVAR.Linear;
+            SubTYPE = STYPE.USER;
+        }
+
+        public override string WriteData()
+        {
+            //throw new NotImplementedException();
+            string res = "!此截面为TAPERED截面输入，信息未处理:" + this.Num.ToString();
             return res;
         }
     }
@@ -1233,6 +1296,114 @@ namespace MidasGenModel.model
             set { _THIK_OUT = value; }
             get { return _THIK_OUT; }
         }
+    }
+
+    /// <summary>
+    /// 截面特性种类，枚举
+    /// </summary>
+    public enum SecType
+    {
+        /// <summary>
+        /// 在DB中输入的，或者其它定型的截面
+        /// </summary>
+        DBUSER,
+        /// <summary>
+        /// 直接输入截面特性数据
+        /// </summary>
+        VALUE,
+        /// <summary>
+        /// SRC构件截面
+        /// </summary>
+        SRC,
+        /// <summary>
+        /// 组合截面
+        /// </summary>
+        COMBINED,
+        /// <summary>
+        /// 渐变截面
+        /// </summary>
+        TAPERED
+    }
+
+    /// <summary>
+    /// 截面形状，枚举
+    /// </summary>
+    public enum SecShape
+    {
+        /// <summary>
+        /// Angle 角钢
+        /// </summary>
+        L,
+        /// <summary>
+        /// Channel 槽钢 
+        /// </summary>
+        C,
+        /// <summary>
+        /// H型钢
+        /// </summary>
+        H,
+        /// <summary>
+        /// T型钢
+        /// </summary>
+        T,
+        /// <summary>
+        /// Box 箱形
+        /// </summary>
+        B,
+        /// <summary>
+        /// Pipe 钢管
+        /// </summary>
+        P,
+        /// <summary>
+        /// Solid Rectangle 实矩形
+        /// </summary>
+        SB,
+        /// <summary>
+        /// Solid Round 实圆形
+        /// </summary>
+        SR,
+        /// <summary>
+        /// Cold Formed Channel 冷弯槽钢
+        /// </summary>
+        CC
+    }
+
+    /// <summary>
+    /// 考虑渐变截面贯性矩的方法（适用于TAPERED截面类型）
+    /// </summary>
+    public enum iVAR
+    {
+        /// <summary>
+        /// 直线形
+        /// </summary>
+        Linear=1,
+        /// <summary>
+        /// 抛物线形
+        /// </summary>
+        Parabolic=2,
+        /// <summary>
+        /// 三次曲线形
+        /// </summary>
+        Cubic=3
+    }
+
+    /// <summary>
+    /// 子截面形状数据输入类型（适用于TAPERED截面类型）
+    /// </summary>
+    public enum STYPE
+    {
+        /// <summary>
+        /// 各国标准截面
+        /// </summary>
+        DB,
+        /// <summary>
+        /// 用户输入定型截面尺寸
+        /// </summary>
+        USER,
+        /// <summary>
+        /// 使用VALUE输入截面
+        /// </summary>
+        VALUE
     }
     #endregion
 
@@ -1509,12 +1680,15 @@ namespace MidasGenModel.model
             foreach (BSections sec in sections.Values)
             {
                 //解决箱形截面当用户没有输入tf2时对截面数据进行标准化
-                if (sec.SSHAPE.Trim() == "B" && (double)sec.SEC_Data[6] == 0
-                    && (double)sec.SEC_Data[4] != 0)
+                if (sec is SectionDBuser)
                 {
-                    sec.SEC_Data[6] = sec.SEC_Data[4];
-                }
-                //todo:当输入截面为数据库截面时，进行截面参数转化
+                    if (sec.SSHAPE == SecShape.B && (double)sec.SEC_Data[6] == 0
+                    && (double)sec.SEC_Data[4] != 0)
+                    {
+                        sec.SEC_Data[6] = sec.SEC_Data[4];
+                    }
+                }                
+            //todo:当输入截面为数据库截面时，进行截面参数转化
             }
         }
 
@@ -1695,33 +1869,68 @@ namespace MidasGenModel.model
                     try
                     {
                         tempInt = int.Parse(temp[0], System.Globalization.NumberStyles.Number);//截面编号
-
-                        BSections secdata = new BSections();
-                        secdata.Num = tempInt;
-                        secdata.TYPE = temp[1];//截面类型
-                        secdata.Name = temp[2];//截面名称
-                        secdata.OFFSET[0] = temp[3];//截面偏心
-                        for (int i = 1; i < 7; i++)
-                            secdata.OFFSET[i] = double.Parse(temp[i + 3], System.Globalization.NumberStyles.Number);
-
-                        secdata.SSHAPE = temp[11];//截面形状
-                        secdata.SEC_Data.Clear();
-                        secdata.SEC_Data.Add(int.Parse(temp[12], System.Globalization.NumberStyles.Number));//截面数据
-                        if ((int)secdata.SEC_Data[0] == 2)
+                        SecType tt = (SecType)Enum.Parse(typeof(SecType), temp[1].Trim(),true);//截面类型(枚举解析)     
+                  
+                        #region 分类进行截面数据读取 
+                        switch (tt)
                         {
-                            for (int j = 1; j < 11; j++)
-                            {
-                                secdata.SEC_Data.Add(double.Parse(temp[j + 12],
-                                    System.Globalization.NumberStyles.Number));
-                            }
-                        }
-                        else if ((int)secdata.SEC_Data[0] == 1)
-                        {
-                            secdata.SEC_Data.Add(temp[13]);
-                            secdata.SEC_Data.Add(temp[14]);
-                        }
+                            case SecType.DBUSER:
+                                BSections secdata = new SectionDBuser();
+                                secdata.Num = tempInt;
+                                secdata.TYPE = tt;//截面类型(枚举解析)                        
+                                secdata.Name = temp[2];//截面名称
 
-                        sections.Add(tempInt, secdata);//输出变量
+                                secdata.OFFSET[0] = temp[3];//截面偏心
+                                for (int i = 1; i < 7; i++)
+                                    secdata.OFFSET[i] = double.Parse(temp[i + 3], System.Globalization.NumberStyles.Number);
+
+                                secdata.bsd = temp[10].Trim() == "YES" ? true : false;
+                                secdata.SSHAPE = (SecShape)Enum.Parse(typeof (SecShape), temp[11].Trim(),true);//截面形状
+                                secdata.SEC_Data.Clear();
+                                secdata.SEC_Data.Add(int.Parse(temp[12], System.Globalization.NumberStyles.Number));//截面数据
+                                if ((int)secdata.SEC_Data[0] == 2)
+                                {
+                                    for (int j = 1; j < 11; j++)
+                                    {
+                                        secdata.SEC_Data.Add(double.Parse(temp[j + 12],
+                                            System.Globalization.NumberStyles.Number));
+                                    }
+                                }
+                                else if ((int)secdata.SEC_Data[0] == 1)
+                                {
+                                    secdata.SEC_Data.Add(temp[13]);
+                                    secdata.SEC_Data.Add(temp[14]);
+                                }
+
+                                sections.Add(tempInt, secdata);//输出变量
+                                break;
+                            case SecType.TAPERED:
+                                SectionTapered secTapered=new SectionTapered ();
+                                secTapered.Num = tempInt;
+                                secTapered.TYPE = tt;//截面类型(枚举解析)                        
+                                secTapered.Name = temp[2];//截面名称
+                                secTapered.OFFSET.Clear();
+                                secTapered.OFFSET.Add(temp[3].Trim());//截面偏心
+                                for (int i = 1; i < 9; i++)
+                                    secTapered.OFFSET.Add(double.Parse(temp[i + 3], System.Globalization.NumberStyles.Number));
+
+                                secTapered.bsd = temp[12].Trim() == "YES" ? true : false;
+                                secTapered.SSHAPE =(SecShape) Enum.Parse(typeof (SecShape), temp[13].Trim(),true);//截面形状符号
+                                secTapered.iyVAR =(iVAR)Enum.Parse(typeof(iVAR),temp[14],true);
+                                secTapered.izVAR =(iVAR)Enum.Parse(typeof(iVAR), temp[15], true);
+                                secTapered.SubTYPE = (STYPE)Enum.Parse(typeof(STYPE), temp[16], true);
+
+                                line = reader.ReadLine();
+                                secTapered.SEC_Data.Clear();
+                                secTapered.SEC_Data.Add(line.Trim());
+
+                                sections.Add(tempInt, secTapered);//存储截面
+                                break;
+                            default:
+                                break;
+                        }
+                        #endregion
+                        
                     }
                     catch
                     {
