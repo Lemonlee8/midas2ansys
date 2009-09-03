@@ -844,7 +844,7 @@ namespace MidasGenModel.model
     public abstract class Element : Object
     {
         private int _iEL, _iMAT, _iPRO;
-        private string _TYPE;
+        private ElemType _TYPE;
         /// <summary>
         /// 单元编号
         /// </summary>
@@ -856,7 +856,7 @@ namespace MidasGenModel.model
         /// <summary>
         /// 单元类型
         /// </summary>
-        public string TYPE
+        public ElemType TYPE
         {
             get { return _TYPE; }
             set { _TYPE = value; }
@@ -888,7 +888,7 @@ namespace MidasGenModel.model
         public Element()
         {
             iEL = 0;
-            TYPE = "NOTYPE";
+            TYPE = ElemType.NOTYPE;
             iMAT = 0;
             iPRO = 0;
             iNs = new List<int>();
@@ -901,7 +901,7 @@ namespace MidasGenModel.model
         /// <param name="mat">单元材料号</param>
         /// <param name="pro">单元特性值号，或截面号</param>
         /// <param name="iNodes">节点号数组</param>
-        public Element(int num, string type, int mat, int pro, params int[] iNodes)
+        public Element(int num, ElemType type, int mat, int pro, params int[] iNodes)
         {
             iEL = num;
             TYPE = type;
@@ -960,7 +960,7 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
-        /// 其它参数1
+        /// 子类型（BEAM和TRUSS无关）
         /// </summary>
         public int iSUB
         {
@@ -968,7 +968,7 @@ namespace MidasGenModel.model
             get { return _iSUB; }
         }
         /// <summary>
-        /// 其它参数2
+        /// 单元另行输入的数据（BEAM和TRUSS无关）
         /// </summary>
         public double EXVAL
         {
@@ -986,7 +986,7 @@ namespace MidasGenModel.model
         public FrameElement()
             : base()
         {
-            this.TYPE = "BEAM";
+            this.TYPE = ElemType.BEAM;
             this.beta = 0;
         }
         /// <summary>
@@ -997,7 +997,7 @@ namespace MidasGenModel.model
         /// <param name="mat">材料号</param>
         /// <param name="pro">截面特性号</param>
         /// <param name="iNodes">节点号数组</param>
-        public FrameElement(int num, string type, int mat, int pro, params int[] iNodes)
+        public FrameElement(int num, ElemType type, int mat, int pro, params int[] iNodes)
             : base(num, type, mat, pro, iNodes)
         {
             //调用基类的构造函数
@@ -1036,7 +1036,7 @@ namespace MidasGenModel.model
         public PlanarElement()
             : base()
         {
-            this.TYPE = "PLATE";
+            this.TYPE = ElemType.PLATE;
         }
 
         /// <summary>
@@ -1047,7 +1047,7 @@ namespace MidasGenModel.model
         /// <param name="mat">材料号</param>
         /// <param name="pro">截面号，厚度号</param>
         /// <param name="iNodes">节点号数组</param>
-        public PlanarElement(int num, string type, int mat, int pro, params int[] iNodes)
+        public PlanarElement(int num, ElemType type, int mat, int pro, params int[] iNodes)
             : base(num, type, mat, pro, iNodes)
         {
             //调用基类的对应构造函数
@@ -1089,6 +1089,11 @@ namespace MidasGenModel.model
         /// </summary>
         public ArrayList SEC_Data;
 
+        /// <summary>
+        /// 存储截面面积
+        /// </summary>
+        protected double _Area;
+
         //属性
         /// <summary>
         /// 截面名称属性
@@ -1105,6 +1110,13 @@ namespace MidasGenModel.model
         {
             get { return iSEC; }
             set { iSEC = value; }
+        }
+        /// <summary>
+        /// 面积特性
+        /// </summary>
+        public double Area
+        {
+            get { return _Area; }
         }
 
         /// <summary>
@@ -1139,6 +1151,11 @@ namespace MidasGenModel.model
         /// <returns>ansys命令流字符串</returns>
         public abstract string WriteData();
 
+        /// <summary>
+        /// 重新按数据计算截面特性：面积、贯性矩等
+        /// </summary>
+        public abstract void  CalculateSecProp();
+
     }
 
     /// <summary>
@@ -1146,6 +1163,13 @@ namespace MidasGenModel.model
     /// </summary>
     public class SectionDBuser : BSections
     {
+        public SectionDBuser():base()
+        {
+            this.TYPE = SecType.DBUSER;
+            //更新截面特性
+            CalculateSecProp();
+        }
+
         /// <summary>
         /// 重载输出ansys 命令流函数
         /// </summary>
@@ -1201,6 +1225,54 @@ namespace MidasGenModel.model
             }
             return res;
         }
+
+        /// <summary>
+        /// 重载计算截面特性
+        /// </summary>
+        public override void CalculateSecProp()
+        {
+            //throw new NotImplementedException();
+            if (this.SSHAPE == SecShape.B && (int)this.SEC_Data[0] == 2)//箱形截面
+            {
+                this._Area = 0;
+                //todo:面积计算实现
+            }
+            else if (this.SSHAPE == SecShape.H && (int)this.SEC_Data[0] == 2)//H型截面
+            {
+                this._Area = 0;
+                //todo:面积计算实现
+            }
+            else if (this.SSHAPE == SecShape.P && (int)this.SEC_Data[0] == 2)//圆管截面
+            {
+                double ri = (double)SEC_Data[1] / 2 - (double)SEC_Data[2];
+                double ro = (double)SEC_Data[1] / 2;
+                this._Area = Math.PI * Math.Pow(ro, 2) - Math.PI * Math.Pow(ri, 2);
+            }
+            else if (this.SSHAPE == SecShape.SB && (int)this.SEC_Data[0] == 2)//矩形截面
+            {
+                this._Area = 0;
+                //todo:面积计算实现
+            }
+            else if (this.SSHAPE == SecShape.T && (int)this.SEC_Data[0] == 2)//T型截面
+            {
+                this._Area = 0;
+                //todo:面积计算实现
+            }
+            else if (this.SSHAPE == SecShape.SR && (int)this.SEC_Data[0] == 2)//圆形截面
+            {
+                double rr = (double)SEC_Data[1] / 2;
+                this._Area = Math.PI * Math.Pow(rr, 2);
+            }
+            else if (this.SSHAPE == SecShape.C && (int)this.SEC_Data[0] == 2)//槽钢截面
+            {
+                this._Area = 0;
+                //todo:面积计算实现
+            }
+            else
+            {
+                this._Area=0;
+            }
+        }
     }
 
     /// <summary>
@@ -1232,13 +1304,30 @@ namespace MidasGenModel.model
             iyVAR = iVAR.Linear;
             izVAR = iVAR.Linear;
             SubTYPE = STYPE.USER;
+
+            //更新截面特性
+            CalculateSecProp();
         }
 
+        /// <summary>
+        /// 重载输出函数
+        /// </summary>
+        /// <returns>ansys截面定义命令</returns>
         public override string WriteData()
         {
             //throw new NotImplementedException();
             string res = "!此截面为TAPERED截面输入，信息未处理:" + this.Num.ToString();
             return res;
+        }
+        
+        /// <summary>
+        /// 重载计算截面特性
+        /// </summary>
+        public override void CalculateSecProp()
+        {
+            //throw new NotImplementedException();
+            this._Area = 0;
+            //todo:面积计算实现
         }
     }
 
@@ -1404,6 +1493,53 @@ namespace MidasGenModel.model
         /// 使用VALUE输入截面
         /// </summary>
         VALUE
+    }
+
+    /// <summary>
+    /// 单元类型，枚举
+    /// </summary>
+    public enum ElemType
+    {
+        /// <summary>
+        /// 桁架单元
+        /// </summary>
+        TRUSS,
+        /// <summary>
+        /// 梁单元
+        /// </summary>
+        BEAM,
+        /// <summary>
+        /// 只受拉单元
+        /// </summary>
+        TENSTR,
+        /// <summary>
+        /// 只受压单元
+        /// </summary>
+        COMPTR,
+        /// <summary>
+        /// 平面板单元
+        /// </summary>
+        PLATE,
+        /// <summary>
+        /// 平面应力单元
+        /// </summary>
+        PLSTRS,
+        /// <summary>
+        /// 平面应变单元
+        /// </summary>
+        PLSTRN,
+        /// <summary>
+        /// 轴对称单元
+        /// </summary>
+        AXISYM,
+        /// <summary>
+        /// 实体单元
+        /// </summary>
+        SOLID,
+        /// <summary>
+        /// 未知单元
+        /// </summary>
+        NOTYPE
     }
     #endregion
 
@@ -1687,7 +1823,8 @@ namespace MidasGenModel.model
                     {
                         sec.SEC_Data[6] = sec.SEC_Data[4];
                     }
-                }                
+                }
+                sec.CalculateSecProp();//计算截面特性
             //todo:当输入截面为数据库截面时，进行截面参数转化
             }
         }
@@ -1819,33 +1956,36 @@ namespace MidasGenModel.model
                         tempInt3 = int.Parse(temp[4], System.Globalization.NumberStyles.Number);
                         tempInt4 = int.Parse(temp[5], System.Globalization.NumberStyles.Number);
 
+                        ElemType et = (ElemType)Enum.Parse(typeof(ElemType), temp[1].Trim(), true);
 
-                        switch (temp[1].Trim().ToUpper())
+                        switch (et)
                         {
-                            case "BEAM":
+                            case ElemType.BEAM:
                                 tempDoublt1 = double.Parse(temp[6], System.Globalization.NumberStyles.Float);
                                 FrameElement elemdata = new FrameElement(
-                                    tempInt, "BEAM", tempInt1, tempInt2, tempInt3, tempInt4);
+                                    tempInt, et, tempInt1, tempInt2, tempInt3, tempInt4);
                                 if (Math.Abs(tempDoublt1) <= 0.0001)//如果读入角度非常小，近似认为方向角为0
                                     tempDoublt1 = 0;
                                 elemdata.beta = tempDoublt1;//记录单元方向角
                                 elements.Add(tempInt, elemdata);
                                 break;
-                            case "PLATE":
+                            case ElemType.TRUSS:
+                                goto case ElemType.BEAM;
+                            case ElemType.PLATE:
                                 tempInt5 = int.Parse(temp[6], System.Globalization.NumberStyles.Integer);
                                 tempInt6 = int.Parse(temp[7], System.Globalization.NumberStyles.Integer);
                                 tempInt7 = int.Parse(temp[8], System.Globalization.NumberStyles.Integer);
                                 PlanarElement elemdata_P = new PlanarElement(
-                                    tempInt, "PLATE", tempInt1, tempInt2, tempInt3, tempInt4, tempInt5, tempInt6);
+                                    tempInt, et, tempInt1, tempInt2, tempInt3, tempInt4, tempInt5, tempInt6);
                                 elemdata_P.iSUB = tempInt7;
                                 elements.Add(tempInt, elemdata_P);
                                 break;
-                            case "TENSTR":
+                            case ElemType.TENSTR:
                                 tempDoublt2 = double.Parse(temp[6], System.Globalization.NumberStyles.Number);
                                 tempInt5 = int.Parse(temp[7], System.Globalization.NumberStyles.Integer);
                                 tempDoublt3 = double.Parse(temp[8], System.Globalization.NumberStyles.Integer);
                                 FrameElement elemdata_T = new FrameElement(
-                                    tempInt, "TENSTR", tempInt1, tempInt2, tempInt3, tempInt4);
+                                    tempInt, et, tempInt1, tempInt2, tempInt3, tempInt4);
                                 elemdata_T.beta = tempDoublt2;//单元方向角
                                 elemdata_T.iSUB = tempInt5;
                                 elemdata_T.EXVAL = tempDoublt3;
@@ -2179,17 +2319,60 @@ namespace MidasGenModel.model
                     writer.WriteLine("et,1,189");
                     break;
                 default:
-                    writer.WriteLine("et,1,188");
+                    //writer.WriteLine("et,1,188");
                     break;
             }
             //板单元类型声明
-            writer.WriteLine("et,2,43");
+            writer.WriteLine("et,2,181");
+            //桁架、只受拉、只受压单元类型声明
+            writer.WriteLine("et,3,180");
 
             //实常数信息
-            foreach (KeyValuePair<int, BThickness> thi in this.thickness)
+            writer.WriteLine("\n!实常数信息定义...");
+            foreach (KeyValuePair<int, BThickness> thi in this.thickness)//遍历板厚信息形成实常数
             {
                 writer.WriteLine("r,{0},{1}", thi.Key.ToString(), thi.Value.THIK_IN.ToString());
             }
+            #region LINK180单元实常数处理定义
+            List<int> TRU_sec = new List<int>();//临时记录变链表
+            List <int> TEN_sec=new List<int> ();
+            List <int> COM_sec=new List<int> ();
+            foreach (KeyValuePair<int, Element> elem in this.elements)// 遍历单元信息形成实常数（link180单元用）
+            {
+                if (elem.Value.TYPE == ElemType.TRUSS)
+                {
+                    int num=elem.Value.iPRO;
+                    if (!TRU_sec.Contains(num))
+                        TRU_sec.Add(num);                    
+                }
+                else if (elem.Value.TYPE == ElemType.TENSTR)
+                {
+                    int num = elem.Value.iPRO;
+                    if (!TEN_sec.Contains(num))
+                        TEN_sec.Add(num);
+                }
+                else if (elem.Value.TYPE == ElemType.COMPTR)
+                {
+                    int num = elem.Value.iPRO;
+                    if (!COM_sec.Contains(num))
+                        COM_sec.Add(num);                   
+                }
+            }
+
+            foreach (int tru in TRU_sec)
+            {
+                writer.WriteLine("r,{0},{1},,0", tru+100,this.sections[tru].Area.ToString("G3"));
+            }
+            foreach (int ten in TEN_sec)
+            {
+                writer.WriteLine("r,{0},{1},,1", ten + 200, this.sections[ten].Area.ToString("G3"));
+            }
+            foreach (int com in COM_sec)
+            {
+                writer.WriteLine("r,{0},{1},,-1", com + 300, this.sections[com].Area.ToString("G3"));
+            }
+            #endregion
+
 
             writer.WriteLine("\n!截面信息定义...");
             foreach (KeyValuePair<int, BSections> sec in this.sections)
@@ -2212,19 +2395,33 @@ namespace MidasGenModel.model
                 //按单元类型分类输出
                 switch (elem.Value.TYPE)
                 {
-                    case "BEAM":
+                    case ElemType.BEAM:
                         writer.WriteLine("type,1");
                         writer.WriteLine("secnum," + elem.Value.iPRO.ToString());
                         writer.WriteLine("en," + elem.Value.NodeString());
                         break;
-                    case "PLATE":
+                    case ElemType.TRUSS:
+                        writer.WriteLine("type,3");
+                        writer.WriteLine("real,{0}",elem.Value.iPRO+100);
+                        writer.WriteLine("en,{0}",elem.Value.NodeString());
+                        break;
+                    case ElemType.PLATE:
                         //writer.WriteLine("!{0}号单元是平面单元", elem.Value.iEL.ToString());
                         writer.WriteLine("real,{0}", elem.Value.iPRO.ToString());//厚度号
                         writer.WriteLine("type,2");
                         writer.WriteLine("en," + elem.Value.NodeString());
                         break;
-                    case "TENSTR":
-                        writer.WriteLine("!{0}号单元是只拉单元", elem.Value.iEL.ToString());
+                    case ElemType.TENSTR:
+                        //writer.WriteLine("!{0}号单元是只拉单元", elem.Value.iEL.ToString());
+                        writer.WriteLine("type,3");
+                        writer.WriteLine("real,{0}", elem.Value.iPRO + 200);
+                        writer.WriteLine("en,{0}", elem.Value.NodeString());
+                        break;
+                    case ElemType.COMPTR:
+                        //writer.WriteLine("!{0}号单元是只压单元", elem.Value.iEL.ToString());
+                        writer.WriteLine("type,3");
+                        writer.WriteLine("real,{0}", elem.Value.iPRO + 300);
+                        writer.WriteLine("en,{0}", elem.Value.NodeString());
                         break;
                     default:
                         break;
