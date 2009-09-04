@@ -1623,6 +1623,183 @@ namespace MidasGenModel.model
             RZ = false;
         }
     }
+
+    /// <summary>
+    /// 材料特性值类
+    /// </summary>
+    public class BMaterial:Object 
+    {
+        private int _iMAT;//材料编号
+        private MatType _TYPE;//材料类型
+        private string _MNAME;//材料名称
+        private double _Elast;//弹性模量
+        private double _Poisn;//泊松比
+        private double _Thermal;//线膨胀系数
+        private double _Den;//单位体积重量
+
+        /// <summary>
+        /// 原始mgt数据信息
+        /// </summary>
+        public ArrayList MGT_Data;
+
+        /// <summary>
+        /// 材料号
+        /// </summary>
+        public int iMAT
+        {
+            get { return _iMAT; }
+        }
+        /// <summary>
+        /// 材料类型
+        /// </summary>
+        public MatType TYPE
+        {
+            get { return _TYPE; }
+        }
+        /// <summary>
+        /// 材料名称
+        /// </summary>
+        public string MNAME
+        {
+            get { return _MNAME; }
+        }
+
+        /// <summary>
+        /// 弹性模量
+        /// </summary>
+        public double Elast
+        {
+            get { return _Elast; }
+        }
+        /// <summary>
+        /// 泊松比
+        /// </summary>
+        public double Poisn
+        {
+            get { return _Poisn; }
+        }
+        /// <summary>
+        /// 线膨胀系数
+        /// </summary>
+        public double Thermal
+        {
+            get { return _Thermal; }
+        }
+        /// <summary>
+        /// 单位体积重量
+        /// </summary>
+        public double Den
+        {
+            get { return _Den; }
+        }
+
+        /// <summary>
+        /// 构造函数:默认是钢的数据
+        /// </summary>
+        public BMaterial()
+        {
+            _iMAT = 1;
+            _TYPE = MatType.USER;
+            _MNAME = "dafault";
+            _Elast = 2.06e11;
+            _Poisn = 0.3;
+            _Thermal = 1.2e-5;
+            _Den = 7850;
+        }
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="num">材料号</param>
+        /// <param name="type">材料类型</param>
+        /// <param name="name">材料名称</param>
+        public BMaterial(int num, MatType type, string name)
+        {
+            _iMAT = num;
+            _TYPE = type;
+            _MNAME = name;
+            _Elast = 0;
+            _Poisn = 0;
+            _Thermal = 0;
+            _Den = 0;
+            MGT_Data = new ArrayList();
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="num">材料号</param>
+        /// <param name="type">材料类型</param>
+        /// <param name="name">材料名称</param>
+        /// <param name="E">弹模（Pa）</param>
+        /// <param name="Poi">泊松比</param>
+        /// <param name="Ther">线膨胀系数</param>
+        /// <param name="den">质量密度（kg/m3）</param>
+        public  BMaterial(int num,MatType type,string name,double E,double Poi,double Ther,double den)
+        {
+
+            _iMAT = num;
+            _TYPE = type;
+            _MNAME = name;
+            _Elast = E;
+            _Poisn = Poi;
+            _Thermal = Ther;
+            _Den = den;
+            MGT_Data = new ArrayList();
+        }
+
+        //方法
+        /// <summary>
+        /// 设置弹模等基本数据
+        /// </summary>
+        /// <param name="E">弹模（Pa）</param>
+        /// <param name="Poi">泊松比</param>
+        /// <param name="Ther">线膨胀系数</param>
+        /// <param name="den">质量密度（kg/m3）</param>
+        public void setProp(double E, double Poi, double Ther, double den)
+        {
+            _Elast = E;
+            _Poisn = Poi;
+            _Thermal = Ther;
+            _Den = den;
+        }
+
+        /// <summary>
+        /// 存储MGT文件原始记录信息
+        /// </summary>
+        /// <param name="data">mgt文件数据行</param>
+        public void addMGTdata(string data)
+        {
+            string[] temp = data.Split(',');
+
+            foreach (string dt in temp)
+            {
+                MGT_Data.Add(dt.Trim());
+            }
+        }
+    }
+
+    /// <summary>
+    /// 材料类型，枚举
+    /// </summary>
+    public enum MatType
+    {
+        /// <summary>
+        /// 钢
+        /// </summary>
+        STEEL,
+        /// <summary>
+        /// 混凝土
+        /// </summary>
+        CONC,
+        /// <summary>
+        /// 钢与混凝土
+        /// </summary>
+        SRC,
+        /// <summary>
+        /// 用户自定义
+        /// </summary>
+        USER
+    }
     #endregion
 
     /// <summary>
@@ -1676,6 +1853,11 @@ namespace MidasGenModel.model
         /// 自重荷载信息链表
         /// </summary>
         public SortedList<string, BWeight> selfweight;
+
+        /// <summary>
+        /// 材料信息链表
+        /// </summary>
+        public SortedList<int, BMaterial> mats;
         #endregion
 
         /// <summary>
@@ -1696,6 +1878,7 @@ namespace MidasGenModel.model
             conloads = new SortedList<int, BNLoad>(new RepeatedKeySort());//节点荷载
             beamloads = new SortedList<int, BBLoad>(new RepeatedKeySort());//梁单元荷载
             selfweight = new SortedList<string, BWeight>();//自重信息
+            mats = new SortedList<int, BMaterial>();//材料信息
         }
         /// <summary>
         /// 转化梁单元关键点信息
@@ -1998,6 +2181,41 @@ namespace MidasGenModel.model
                     catch
                     {
                         MessageBox.Show("解析单元信息出错!");
+                    }
+                }
+                #endregion
+                #region 材料信息读取
+                else if (line.StartsWith(" ") && currentdata == "*MATERIAL")
+                {
+                    //进行材料信息的读取
+                    temp = line.Split(',');
+                    try
+                    {
+                        tempInt = int.Parse(temp[0], System.Globalization.NumberStyles.Integer);//材料编号
+                        MatType tp = (MatType )Enum.Parse(typeof(MatType), temp[1].Trim(), true);//材料类型
+                        BMaterial mat = new BMaterial(tempInt,tp,temp[2].Trim());
+                        mat.addMGTdata(line);//存储原始数据
+
+                        switch (tp)
+                        {
+                            case MatType .STEEL:
+                                mat.setProp(2.06e11,0.3,1.2e-5,7850);
+                                break;
+                            case MatType .CONC:
+                                mat.setProp(3e10,0.2,1e-5,2500);//目前按C30输入
+                                break;
+                            case MatType .USER:
+                                //mat.setProp(2.06e11, 0.3, 1.2e-5, 7850);
+                                break;
+                            default:
+                                break;
+                        }
+
+                        mats.Add(tempInt, mat);//存储数据
+                    }
+                    catch
+                    {
+                        MessageBox.Show("解析材料信息出错！\n你的MIDAS模型用的什么鬼材料？？", "错误信息", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
                 #endregion
@@ -2380,7 +2598,16 @@ namespace MidasGenModel.model
                 writer.WriteLine(sec.Value.WriteData());
             }
 
+            #region 材料信息输出
             writer.WriteLine("\n!材料信息定义...");
+            foreach (KeyValuePair<int, BMaterial> mat in this.mats)
+            {
+                writer.WriteLine("mp,ex,{0},{1}", mat.Value.iMAT.ToString("G"), mat.Value.Elast.ToString("G"));
+                writer.WriteLine("mp,prxy,{0},{1}", mat.Value.iMAT.ToString("G"), mat.Value.Poisn.ToString("G"));
+                writer.WriteLine("mp,dens,{0},{1}", mat.Value.iMAT.ToString("G"), mat.Value.Den.ToString("G"));
+                writer.WriteLine("mp,alpx,{0},{1}", mat.Value.iMAT.ToString("G"), mat.Value.Thermal.ToString("G"));
+            }
+            #endregion
             writer.WriteLine("\n!节点数据信息");
             //输出节点信息
             foreach (KeyValuePair<int, Bnodes> node in this.nodes)
@@ -2397,11 +2624,13 @@ namespace MidasGenModel.model
                 {
                     case ElemType.BEAM:
                         writer.WriteLine("type,1");
+                        writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
                         writer.WriteLine("secnum," + elem.Value.iPRO.ToString());
                         writer.WriteLine("en," + elem.Value.NodeString());
                         break;
                     case ElemType.TRUSS:
                         writer.WriteLine("type,3");
+                        writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
                         writer.WriteLine("real,{0}",elem.Value.iPRO+100);
                         writer.WriteLine("en,{0}",elem.Value.NodeString());
                         break;
@@ -2409,17 +2638,20 @@ namespace MidasGenModel.model
                         //writer.WriteLine("!{0}号单元是平面单元", elem.Value.iEL.ToString());
                         writer.WriteLine("real,{0}", elem.Value.iPRO.ToString());//厚度号
                         writer.WriteLine("type,2");
+                        writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
                         writer.WriteLine("en," + elem.Value.NodeString());
                         break;
                     case ElemType.TENSTR:
                         //writer.WriteLine("!{0}号单元是只拉单元", elem.Value.iEL.ToString());
                         writer.WriteLine("type,3");
+                        writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
                         writer.WriteLine("real,{0}", elem.Value.iPRO + 200);
                         writer.WriteLine("en,{0}", elem.Value.NodeString());
                         break;
                     case ElemType.COMPTR:
                         //writer.WriteLine("!{0}号单元是只压单元", elem.Value.iEL.ToString());
                         writer.WriteLine("type,3");
+                        writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
                         writer.WriteLine("real,{0}", elem.Value.iPRO + 300);
                         writer.WriteLine("en,{0}", elem.Value.NodeString());
                         break;
