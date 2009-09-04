@@ -1090,10 +1090,34 @@ namespace MidasGenModel.model
         public ArrayList SEC_Data;
 
         /// <summary>
-        /// 存储截面面积
+        /// 存储截面特性值
         /// </summary>
-        protected double _Area;
+        protected double _Area;//面积
+        protected double _ASy;//单元坐标系y轴方向的有效剪切面积
+        protected double _ASz;//单元坐标系z轴方向的有效剪切面积
+        protected double _Ixx;//截面扭转贯性矩
+        protected double _Iyy;//单元绕y轴的截面贯性矩
+        protected double _Izz;//单元绕z轴的截面贯性矩
 
+        protected double _CyP;//自中和轴到单元坐标系(+)y方向最外端的距离
+        protected double _CyM;//自中和轴到单元坐标系(-)y方向最外端的距离
+        protected double _CzP;//自中和轴到单元坐标系(+)z方向最外端的距离
+        protected double _CzM;//自中和轴到单元坐标系(-)z方向最外端的距离
+        protected double _QyB;//作用于单元坐标系y轴方向的剪切系数
+        protected double _QzB;//作用于单元坐标系z轴方向的剪切系数
+        protected double _PERI_OUT;//截面外轮廓周长
+        protected double _PERI_IN;//截面内轮廓周长
+        protected double _Cy;//截面形心y坐标
+        protected double _Cz;//截面形心z坐标
+
+        protected double _y1;//四个角点坐标
+        protected double _z1;//四个角点坐标
+        protected double _y2;//四个角点坐标
+        protected double _z2;//四个角点坐标
+        protected double _y3;//四个角点坐标
+        protected double _z3;//四个角点坐标
+        protected double _y4;//四个角点坐标
+        protected double _z4;//四个角点坐标
         //属性
         /// <summary>
         /// 截面名称属性
@@ -1156,6 +1180,57 @@ namespace MidasGenModel.model
         /// </summary>
         public abstract void  CalculateSecProp();
 
+        /// <summary>
+        /// 设置截面常用特性值1
+        /// </summary>
+        /// <param name="area">面积</param>
+        /// <param name="asy">y向有效剪切面积</param>
+        /// <param name="asz">z向有效剪切面积</param>
+        /// <param name="ixx">扭转贯性矩</param>
+        /// <param name="iyy">绕y轴的贯性矩</param>
+        /// <param name="izz">绕z轴的贯性矩</param>
+        public void setSecProp1(double area, double asy, double asz, double ixx, double iyy, double izz)
+        {
+            _Area = area; _ASy = asy; _ASz = asz;
+            _Ixx = ixx; _Iyy = iyy; _Izz = izz;
+        }
+
+        /// <summary>
+        /// 设置截面常用特性值2
+        /// </summary>
+        /// <param name="cyp">自中和轴到单元坐标系(+)y方向最外端的距离</param>
+        /// <param name="cym">自中和轴到单元坐标系(-)y方向最外端的距离</param>
+        /// <param name="czp">自中和轴到单元坐标系(+)z方向最外端的距离</param>
+        /// <param name="czm">自中和轴到单元坐标系(-)z方向最外端的距离</param>
+        /// <param name="qyb">作用于单元坐标系y轴方向的剪切系数</param>
+        /// <param name="qzb">作用于单元坐标系z轴方向的剪切系数</param>
+        /// <param name="p_out">截面外轮廓周长</param>
+        /// <param name="p_in">截面内轮廓周长</param>
+        /// <param name="cy">截面形心y坐标</param>
+        /// <param name="cz">截面形心y坐标</param>
+        public void setSecProp2(double cyp, double cym, double czp, double czm, double qyb, double qzb,
+            double p_out, double p_in, double cy, double cz)
+        {
+            _CyP = cyp; _CyM = cym; _CzP = czp; _CzM = czm; _QyB = qyb; _QzB = qzb;
+            _PERI_OUT = p_out; _PERI_IN = p_in;
+        }
+
+        /// <summary>
+        /// 设置截面常用特性值3
+        /// </summary>
+        /// <param name="y1">左上点y坐标</param>
+        /// <param name="z1">左上点z坐标</param>
+        /// <param name="y2">右上点y坐标</param>
+        /// <param name="z2">右上点z坐标</param>
+        /// <param name="y3">左下点y坐标</param>
+        /// <param name="z3">左下点z坐标</param>
+        /// <param name="y4">右下点y坐标</param>
+        /// <param name="z4">右下点z坐标</param>
+        public void setSecProp3(double y1, double z1, double y2, double z2, double y3, double z3, double y4, double z4)
+        {
+            _y1 = y1; _z1 = z1; _y2 = y2; _z2 = z2;
+            _y3 = y3; _z3 = z3; _y4 = y4; _z4 = z4;
+        }
     }
 
     /// <summary>
@@ -1332,6 +1407,66 @@ namespace MidasGenModel.model
     }
 
     /// <summary>
+    /// 自定义SPC截面信息类
+    /// </summary>
+    public class SectionGeneral : BSections
+    {
+        private Point2dCollection _OPOLY;
+        private List<Point2dCollection> _IPOLYs;
+        private bool _bBU;
+        private bool _bEQ;
+
+
+        /// <summary>
+        /// 未知参数
+        /// </summary>
+        public bool bBU
+        {
+            set { _bBU = value; }
+            get { return _bBU; }
+        }
+
+        /// <summary>
+        /// 未知参数
+        /// </summary>
+        public bool bEQ
+        {
+            set { _bEQ = value; }
+            get { return _bEQ; }
+        }
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public SectionGeneral()
+            : base()
+        {
+            _OPOLY = new Point2dCollection();
+            _IPOLYs = new List<Point2dCollection>();
+            _bBU = true;
+            _bEQ = true;
+        }
+
+        /// <summary>
+        /// 输出Ansys截面信息
+        /// </summary>
+        /// <returns>APDL命令：截面类型 SectionGeneral</returns>
+        public override string WriteData()
+        {
+            //throw new NotImplementedException();
+            string res = null;
+            res = "!此截面为SPC自定义截面！！！";
+            return res;
+        }
+        /// <summary>
+        /// 计算截面特性： SectionGeneral类截面什么也不做
+        /// </summary>
+        public override void CalculateSecProp()
+        {
+            //throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
     /// 存储板单元厚度信息的类
     /// </summary>
     public class BThickness
@@ -1454,7 +1589,11 @@ namespace MidasGenModel.model
         /// <summary>
         /// Cold Formed Channel 冷弯槽钢
         /// </summary>
-        CC
+        CC,
+        /// <summary>
+        /// 自定义截面
+        /// </summary>
+        GEN
     }
 
     /// <summary>
@@ -2020,6 +2159,9 @@ namespace MidasGenModel.model
         {
             string currentdata = "notype";//指定当前数据类型
             string curLoadCase = "notype";//指定当前荷载工况
+
+            bool Newsec = true;//指示当前截面
+            bool NewPoly = true;//指示当前点对
             //初始化模型信息数据
             //model = new Bmodel();
             //临时变量
@@ -2220,7 +2362,7 @@ namespace MidasGenModel.model
                 }
                 #endregion
                 #region 截面数据读取
-                else if (line.StartsWith(" ") == true && currentdata == "*SECTION")
+                else if (line.StartsWith(" ") && currentdata == "*SECTION")//一般截面
                 {
                     //进行截面属性读取
                     temp = line.Split(',');
@@ -2292,7 +2434,46 @@ namespace MidasGenModel.model
                     }
                     catch
                     {
-                        MessageBox.Show("解析截面属性出错！\n是否选用了不支持的截面数据类型？？", "错误信息", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("解析常规截面属性出错！\n是否选用了不支持的截面数据类型？？", "错误信息", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                else if (line.StartsWith(" ") && currentdata == "*SECT-GENERAL")//自定义截面
+                {                 
+                    if (line.Contains("SECT="))
+                    {
+                        SectionGeneral secGEN = new SectionGeneral();
+                        temp = line.Trim().Remove(0, 5).Split(',');
+                        tempInt = int.Parse(temp[0], System.Globalization.NumberStyles.Integer);//截面编号
+                        SecType tt = (SecType)Enum.Parse(typeof(SecType), temp[1].Trim(), true);//截面类型(枚举解析)
+                        secGEN.Num = tempInt;
+                        secGEN.TYPE = tt;
+                        secGEN.Name = temp[2].Trim();
+                        secGEN.OFFSET.Add(temp[3].Trim());
+                        for (int i = 1; i < 7; i++)
+                            secGEN.OFFSET.Add( double.Parse(temp[i + 3], System.Globalization.NumberStyles.Number));
+
+                        secGEN.bsd = temp[10].Trim() == "YES" ? true : false;
+                        secGEN.SSHAPE = (SecShape)Enum.Parse(typeof(SecShape), temp[11].Trim(), true);//截面形状符号
+                        secGEN.bBU = temp[12].Trim() == "YES" ? true : false;
+                        secGEN.bEQ = temp[13].Trim() == "YES" ? true : false;
+
+                        line = reader.ReadLine();//第二行
+                        temp = line.Split(',');
+                        secGEN.setSecProp1(double.Parse(temp[0]),double .Parse(temp[1]),double.Parse(temp[2]),
+                            double .Parse(temp[3]),double.Parse(temp[4]),double.Parse(temp[5]));
+                        line = reader.ReadLine();//第三行
+                        temp = line.Split(',');
+                        //secGEN.setSecProp2(
+
+                        Newsec = false;//指示后面还有数据
+                    }
+                    else if (line.Contains("OPOLY=")&&Newsec==false)
+                    {
+
+                    }
+                    else if (line.Contains("IPOLY="))
+                    {
+
                     }
                 }
                 #endregion
@@ -2878,7 +3059,7 @@ namespace MidasGenModel.model
     }
 
     /// <summary>
-    /// 点类
+    /// 3d点类
     /// </summary>
     public class Point3d : Object
     {
@@ -2947,6 +3128,85 @@ namespace MidasGenModel.model
 
         private const string THREE_COMPONENTS =
             "Point3d must contain exactly three components,(x,y,z)";
+    }
+    
+    /// <summary>
+    /// 2d点类
+    /// </summary>
+    public class Point2d : Object
+    {
+        private double XX, YY;
+        /// <summary>
+        /// 默认构造函数
+        /// </summary>
+        public Point2d()
+        {
+            XX = 0;
+            YY = 0;
+        }
+        /// <summary>
+        /// 带参数的构造函数
+        /// </summary>
+        /// <param name="nx">节点X坐标</param>
+        /// <param name="ny">节点Y坐标</param>
+        public Point2d(double nx, double ny, double nz)
+        {
+            XX = nx;
+            YY = ny;
+        }
+        //属性
+        public double X
+        {
+            get { return XX; }
+            set { XX = value; }
+        }
+        public double Y
+        {
+            get { return YY; }
+            set { YY = value; }
+        }
+    }
+
+    /// <summary>
+    /// 二维点集合
+    /// </summary>
+    public class Point2dCollection:Object
+    {
+        private List<Point2d> _pts;
+
+        //属性
+        /// <summary>
+        /// 点集
+        /// </summary>
+        public List<Point2d> Pts
+        {
+            get { return _pts; }
+        }
+
+        /// <summary>
+        /// 点数量
+        /// </summary>
+        public int Length
+        {
+            get { return _pts.Count; }
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public Point2dCollection()
+        {
+            _pts = new List<Point2d>();
+        }
+
+        /// <summary>
+        /// 添加点入集合
+        /// </summary>
+        /// <param name="pt">点坐标</param>
+        public void addPt(Point2d pt)
+        {
+            _pts.Add(pt);
+        }
     }
 
     /// <summary>
