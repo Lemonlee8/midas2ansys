@@ -1941,6 +1941,225 @@ namespace MidasGenModel.model
     }
     #endregion
 
+    #region 单元内力类(doing:20091109)
+    /// <summary>
+    /// 单元截面内力类
+    /// </summary>
+    public class SecForce
+    {
+        private double _N, _T, _Vy, _Vz, _My, _Mz;
+        /// <summary>
+        /// 轴向力(拉为正，压为负)
+        /// </summary>
+        public double N
+        {
+            get { return _N; }
+        }
+        /// <summary>
+        /// 扭矩
+        /// </summary>
+        public double T
+        {
+            get { return _T; }
+        }
+        /// <summary>
+        /// 沿单元y轴的剪力
+        /// </summary>
+        public double Vy
+        {
+            get { return _Vy; }
+        }
+        /// <summary>
+        /// 沿单元z轴的剪力
+        /// </summary>
+        public double Vz
+        {
+            get { return _Vz; }
+        }
+        /// <summary>
+        /// 绕单元y轴的弯矩
+        /// </summary>
+        public double My
+        {
+            get { return _My; }
+        }
+        /// <summary>
+        /// 绕单元z轴的弯矩
+        /// </summary>
+        public double Mz
+        {
+            get { return _Mz; }
+        }
+
+        /// <summary>
+        /// 指定截面内力
+        /// </summary>
+        /// <param name="N"></param>
+        /// <param name="T"></param>
+        /// <param name="Vy"></param>
+        /// <param name="Vz"></param>
+        /// <param name="My"></param>
+        /// <param name="Mz"></param>
+        public void SetAllForces(double N,double T,double Vy,double Vz,double My,double Mz)
+        {
+            _N = N; _T = T;
+            _Vy = Vy; _Vz = Vz;
+            _My = My; _Mz = Mz;
+        }
+    }
+    /// <summary>
+    /// 存储单元内力的类
+    /// </summary>
+    public class ElemForce
+    {
+        private SecForce _Force_i;
+        private SecForce _Force_18;
+        private SecForce _Force_28;
+        private SecForce _Force_38;
+        private SecForce _Force_48;
+        private SecForce _Force_58;
+        private SecForce _Force_68;
+        private SecForce _Force_78;
+        private SecForce _Force_j;
+        #region 类属性
+        /// <summary>
+        /// 单元i处截面内力
+        /// </summary>
+        public SecForce Force_i
+        {
+            get { return _Force_i; }
+        }
+        /// <summary>
+        /// 单元1/8处截面内力
+        /// </summary>
+        public SecForce Forcce_18
+        {
+            get { return _Force_18; }
+        }
+        /// <summary>
+        /// 单元2/8处截面内力
+        /// </summary>
+        public SecForce Force_28
+        {
+            get { return _Force_28; }
+        }
+        /// <summary>
+        /// 单元3/8处截面内力
+        /// </summary>
+        public SecForce Force_38
+        {
+            get { return _Force_38; }
+        }
+        /// <summary>
+        /// 单元中点截面处的内力
+        /// </summary>
+        public SecForce Force_48
+        {
+            get { return _Force_48; }
+        }
+        /// <summary>
+        /// 单元5/8处截面内力
+        /// </summary>
+        public SecForce Force_58
+        {
+            get { return _Force_58; }
+        }
+        /// <summary>
+        /// 单元6/8处截面内力
+        /// </summary>
+        public SecForce Force_68
+        {
+            get { return _Force_68; }
+        }
+        /// <summary>
+        /// 单元7/8处的截面内力
+        /// </summary>
+        public SecForce Force_78
+        {
+            get { return _Force_78; }
+        }
+        /// <summary>
+        /// 单元j端截面内力
+        /// </summary>
+        public SecForce Force_j
+        {
+            get { return _Force_j; }
+        }
+        #endregion
+        #region 类方法
+        /// <summary>
+        /// 输入单元内力
+        /// </summary>
+        /// <param name="Fi">单元i端截面内力</param>
+        /// <param name="Fj">单元j端截面内力</param>
+        public void  SetElemForce(SecForce Fi,SecForce Fj)
+        {
+            _Force_i = Fi;
+            _Force_j = Fj;
+        }
+        /// <summary>
+        /// 输入单元内力（三个截面）
+        /// </summary>
+        /// <param name="Fi">单元i端截面内力</param>
+        /// <param name="F48">单元中截面内力</param>
+        /// <param name="Fj">单元j端截面内力</param>
+        public void SetElemForce(SecForce Fi, SecForce F48, SecForce Fj)
+        {
+            _Force_i = Fi; _Force_j = Fj;
+            _Force_48 = F48;
+        }
+        /// <summary>
+        /// 输入单元内力，每次一个截面
+        /// </summary>
+        /// <param name="F">要输入的截面内力</param>
+        /// <param name="num">截面号：0代表i端截面，8代表j端截面</param>
+        public void SetElemForce(SecForce F, int num)
+        {
+            switch (num)
+            {
+                case 0: _Force_i = F; break;
+                case 1: _Force_18 = F; break;
+                case 2: _Force_28 = F; break;
+                case 3: _Force_38 = F; break;
+                case 4: _Force_48 = F; break;
+                case 5: _Force_58 = F; break;
+                case 6: _Force_68 = F; break;
+                case 7: _Force_78 = F; break;
+                case 8: _Force_j = F; break;
+                default: break;
+            }
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// 单元内力表
+    /// </summary>
+    public class BElemForceTable:Object
+    {
+        private int _elem;
+        private SortedList<LCType,ElemForce> _LCForces;
+
+        /// <summary>
+        /// 单元号
+        /// </summary>
+        public int elem
+        {
+            get { return _elem; }
+        }
+
+        /// <summary>
+        /// 给单元表添加工况内力
+        /// </summary>
+        /// <param name="lc">工况类型</param>
+        /// <param name="force">工况内力</param>
+        public void add_LCForce(LCType lc, ElemForce force)
+        {
+            _LCForces.Add(lc, force);
+        }
+    }
+    #endregion
+
     /// <summary>
     /// 模型类：封装所有数据信息
     /// </summary>
@@ -3058,6 +3277,7 @@ namespace MidasGenModel.model
         #endregion
     }
 
+    #region 常用基本数据类型
     /// <summary>
     /// 3d点类
     /// </summary>
@@ -3225,4 +3445,5 @@ namespace MidasGenModel.model
         }
         #endregion
     }
+    #endregion 
 }
