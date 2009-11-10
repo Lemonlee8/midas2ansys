@@ -1941,7 +1941,7 @@ namespace MidasGenModel.model
     }
     #endregion
 
-    #region 单元内力类(doing:20091109)
+    #region 单元内力类
     /// <summary>
     /// 单元截面内力类
     /// </summary>
@@ -2138,7 +2138,7 @@ namespace MidasGenModel.model
     public class BElemForceTable:Object
     {
         private int _elem;
-        private SortedList<LCType,ElemForce> _LCForces;
+        private SortedList<string,ElemForce> _LCForces;
 
         /// <summary>
         /// 单元号
@@ -2146,6 +2146,17 @@ namespace MidasGenModel.model
         public int elem
         {
             get { return _elem; }
+            set { _elem = value; }
+        }
+
+
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        public BElemForceTable()
+        {
+            _elem = 0;
+            _LCForces = new SortedList<string, ElemForce>();
         }
 
         /// <summary>
@@ -2153,7 +2164,7 @@ namespace MidasGenModel.model
         /// </summary>
         /// <param name="lc">工况类型</param>
         /// <param name="force">工况内力</param>
-        public void add_LCForce(LCType lc, ElemForce force)
+        public void add_LCForce(string lc, ElemForce force)
         {
             _LCForces.Add(lc, force);
         }
@@ -2216,6 +2227,11 @@ namespace MidasGenModel.model
         /// 材料信息链表
         /// </summary>
         public SortedList<int, BMaterial> mats;
+
+        /// <summary>
+        /// 单元内力链表
+        /// </summary>
+        public SortedList<int, BElemForceTable> elemforce;
         #endregion
 
         /// <summary>
@@ -2237,6 +2253,8 @@ namespace MidasGenModel.model
             beamloads = new SortedList<int, BBLoad>(new RepeatedKeySort());//梁单元荷载
             selfweight = new SortedList<string, BWeight>();//自重信息
             mats = new SortedList<int, BMaterial>();//材料信息
+
+            elemforce = new SortedList<int, BElemForceTable>();//单元内力表
         }
         /// <summary>
         /// 转化梁单元关键点信息
@@ -3273,6 +3291,15 @@ namespace MidasGenModel.model
             writer.Close();
             stream.Close();
             return true;
+        }
+
+        /// <summary>
+        /// 读取MIDAS输出的内力结果入模型
+        /// </summary>
+        /// <param name="MidasFile"></param>
+        public void ReadElemForces(string MidasFile)
+        {
+            //todo:
         }
         #endregion
     }
