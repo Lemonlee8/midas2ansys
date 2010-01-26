@@ -2174,6 +2174,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 模型类：封装所有数据信息
     /// </summary>
+    [Serializable]
     public class Bmodel : Object
     {
         #region 成员
