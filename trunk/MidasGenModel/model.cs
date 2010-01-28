@@ -13,6 +13,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 模型单位信息
     /// </summary>
+    [Serializable]
     public class BUNIT
     {
         private string _Force;
@@ -145,6 +146,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 荷载工况类
     /// </summary>
+    [Serializable]
     public class BLoadCase
     {
         /// <summary>
@@ -159,6 +161,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 荷载类
     /// </summary>
+    [Serializable]
     public abstract class Load
     {
         protected string group;//组名
@@ -185,6 +188,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 节点荷载类
     /// </summary>
+    [Serializable]
     public class BNLoad : Load
     {
         private int node;//节点号
@@ -307,6 +311,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 自重荷载类
     /// </summary>
+    [Serializable]
     public class BWeight : Load
     {
         private double gx, gy, gz;
@@ -438,6 +443,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 梁单元荷载类
     /// </summary>
+    [Serializable]
     public class BBLoad : Load
     {
         private int elem_num;//单元号
@@ -787,6 +793,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 定义存储文件信息的节点类：Bnodes
     /// </summary>
+    [Serializable]
     public class Bnodes : Object
     {
         /// <summary>
@@ -841,6 +848,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 单元基类
     /// </summary>
+    [Serializable]
     public abstract class Element : Object
     {
         private int _iEL, _iMAT, _iPRO;
@@ -935,6 +943,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 梁单元类
     /// </summary>
+    [Serializable]
     public class FrameElement : Element
     {
         /// <summary>
@@ -1057,6 +1066,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 存储截面特性的基类
     /// </summary>
+    [Serializable]
     public abstract class BSections
     {
         /// <summary>
@@ -1236,6 +1246,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 常用截面信息类
     /// </summary>
+    [Serializable]
     public class SectionDBuser : BSections
     {
         public SectionDBuser():base()
@@ -1469,6 +1480,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 存储板单元厚度信息的类
     /// </summary>
+    [Serializable]
     public class BThickness
     {
         private int _iTHK;
@@ -1686,6 +1698,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 边界条件类
     /// </summary>
+    [Serializable]
     public class BConstraint : Object
     {
         /// <summary>
@@ -1766,6 +1779,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 材料特性值类
     /// </summary>
+    [Serializable]
     public class BMaterial:Object 
     {
         private int _iMAT;//材料编号
@@ -2135,6 +2149,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 单元内力表
     /// </summary>
+    [Serializable]
     public class BElemForceTable:Object
     {
         private int _elem;
@@ -3460,6 +3475,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 实现hash表重复键成员的添加
     /// </summary>
+    [Serializable]
     public class RepeatedKeySort : IComparer<int>
     {
         #region IComparer 成员
