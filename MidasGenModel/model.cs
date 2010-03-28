@@ -1016,6 +1016,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 平面单元类
     /// </summary>
+    [Serializable]
     public class PlanarElement : Element
     {
         private int _iSUB;
@@ -3310,12 +3311,23 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
-        /// 读取MIDAS输出的内力结果入模型
+        /// 读取MIDAS输出的内力结果入模型///doing
         /// </summary>
-        /// <param name="MidasFile"></param>
-        public void ReadElemForces(string MidasFile)
+        /// <param name="MidasFile">MIDAS输出的单元内力表，单位默认为kN,m</param>
+        public void ReadElemForces(string MidasForceFile)
         {
-            //todo:
+            string line = null;//行文本
+            int i = 0;
+            
+            FileStream stream = File.Open(MidasForceFile, FileMode.Open, FileAccess.Read);
+            StreamReader reader = new StreamReader(stream);
+            line = reader.ReadLine();
+            for (line = reader.ReadLine(); line != null; line = reader.ReadLine())
+            {
+                i++;
+            }
+            reader.Close();
+            MessageBox.Show(i.ToString());
         }
         #endregion
     }

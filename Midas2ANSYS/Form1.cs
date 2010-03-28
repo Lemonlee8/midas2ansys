@@ -62,6 +62,9 @@ namespace Midas2ANSYS
                 //To do:执行文件转换
                 Bmodel modelinfo=new Bmodel ();//局部变量，用于存储模型数据
                 modelinfo.ReadFromMgt (tb_mgt.Text);
+                //写出二进制文件
+                MidasGenModel.Application.WriteModelBinary(
+                    modelinfo, Path.ChangeExtension(tb_mgt.Text, ".GA1"));
                 //if (WriteInp(tb_inp.Text, modelinfo) == true)
                 if (modelinfo.WriteToInp(tb_inp.Text,comboBox1.SelectedIndex+1) == true)
                     MessageBox.Show("恭喜，转换完成^_^","完成情况",MessageBoxButtons.OK,MessageBoxIcon.Asterisk);
@@ -82,8 +85,21 @@ namespace Midas2ANSYS
         {
             if (tb_mgt.Text.EndsWith(".mgt")||tb_mgt.Text.EndsWith(".mct"))
             {
-                tb_inp.Text = tb_mgt.Text.Remove(tb_mgt.Text.LastIndexOf('.') + 1) + "inp";
+                tb_inp.Text = Path.ChangeExtension(tb_mgt.Text,".inp");
             }           
+        }
+
+        /// <summary>
+        /// 测试用
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string modelpath = Path.ChangeExtension(tb_mgt.Text, ".ga1");
+            string path =Path.ChangeExtension(tb_mgt.Text,".nl");
+            Bmodel mm = MidasGenModel.Application.ReadModelBinary(modelpath);
+            mm.ReadElemForces(path);
         }
     
     }
