@@ -2007,14 +2007,34 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
+        /// 构造函数1
+        /// </summary>
+        public SecForce()
+        {
+            this.SetAllForces(0, 0, 0, 0, 0, 0);
+        }
+        /// <summary>
+        /// 构造函数2
+        /// </summary>
+        /// <param name="N">轴力/kN/m</param>
+        /// <param name="T">扭矩/kN/m</param>
+        /// <param name="Vy">剪力/kN/m</param>
+        /// <param name="Vz">剪力/kN/m</param>
+        /// <param name="My">弯矩/kN/m</param>
+        /// <param name="Mz">弯矩/kN/m</param>
+        public SecForce(double N, double T, double Vy, double Vz, double My, double Mz)
+        {
+            this.SetAllForces(N, T, Vy, Vz, My, Mz);
+        }
+        /// <summary>
         /// 指定截面内力
         /// </summary>
-        /// <param name="N"></param>
-        /// <param name="T"></param>
-        /// <param name="Vy"></param>
-        /// <param name="Vz"></param>
-        /// <param name="My"></param>
-        /// <param name="Mz"></param>
+        /// <param name="N">轴力/kN/m</param>
+        /// <param name="T">扭矩/kN/m</param>
+        /// <param name="Vy">剪力/kN/m</param>
+        /// <param name="Vz">剪力/kN/m</param>
+        /// <param name="My">弯矩/kN/m</param>
+        /// <param name="Mz">弯矩/kN/m</param>
         public void SetAllForces(double N,double T,double Vy,double Vz,double My,double Mz)
         {
             _N = N; _T = T;
@@ -3317,6 +3337,11 @@ namespace MidasGenModel.model
         public void ReadElemForces(string MidasForceFile)
         {
             string line = null;//行文本
+            string[] curdata= null;//当前数据表存储变量
+            int tempInt = 0;
+            string tempLC,tempLOC= null;
+            double[] tempDouble =new double[6];
+
             int i = 0;
             
             FileStream stream = File.Open(MidasForceFile, FileMode.Open, FileAccess.Read);
@@ -3324,7 +3349,18 @@ namespace MidasGenModel.model
             line = reader.ReadLine();
             for (line = reader.ReadLine(); line != null; line = reader.ReadLine())
             {
+                curdata = line.Split("\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);//字符串分割
+                tempInt = int.Parse(curdata[0], System.Globalization.NumberStyles.Number);
+                for (int k = 0; k < 6; k++)
+                {
+                    tempDouble[k] = double.Parse(curdata[k+3], System.Globalization.NumberStyles.Float);
+                }
+                //建立截面内力
+                SecForce sec1 = new SecForce(tempDouble[0],tempDouble[3],tempDouble[1],
+                    tempDouble[2],tempDouble[4],tempDouble[5]);
                 i++;
+                
+                string ss = curdata[0];
             }
             reader.Close();
             MessageBox.Show(i.ToString());
