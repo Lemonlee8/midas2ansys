@@ -1960,6 +1960,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 单元截面内力类
     /// </summary>
+    [Serializable]
     public class SecForce
     {
         private double _N, _T, _Vy, _Vz, _My, _Mz;
@@ -2045,6 +2046,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 存储单元内力的类
     /// </summary>
+    [Serializable]
     public class ElemForce
     {
         private SecForce _Force_i;
@@ -2185,6 +2187,14 @@ namespace MidasGenModel.model
             set { _elem = value; }
         }
 
+        /// <summary>
+        /// 工况内力链表
+        /// </summary>
+        public SortedList<string, ElemForce> LCForces
+        {
+            get { return _LCForces; }
+            set { _LCForces = value; }
+        }
 
         /// <summary>
         /// 初始化
@@ -2203,6 +2213,15 @@ namespace MidasGenModel.model
         public void add_LCForce(string lc, ElemForce force)
         {
             _LCForces.Add(lc, force);
+        }
+        /// <summary>
+        /// 判断是否含有相应的组合
+        /// </summary>
+        /// <param name="lc"></param>
+        /// <returns></returns>
+        public bool hasLC(string lc)
+        {
+            return _LCForces.ContainsKey(lc);
         }
     }
     #endregion
@@ -3338,8 +3357,8 @@ namespace MidasGenModel.model
         {
             string line = null;//行文本
             string[] curdata= null;//当前数据表存储变量
-            int tempInt = 0;
-            string tempLC,tempLOC= null;
+            int curNum=0;//当前单元号
+            string curLC=null;//当前工况名
             double[] tempDouble =new double[6];
 
             int i = 0;
@@ -3347,10 +3366,14 @@ namespace MidasGenModel.model
             FileStream stream = File.Open(MidasForceFile, FileMode.Open, FileAccess.Read);
             StreamReader reader = new StreamReader(stream);
             line = reader.ReadLine();
+            
             for (line = reader.ReadLine(); line != null; line = reader.ReadLine())
             {
                 curdata = line.Split("\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);//字符串分割
-                tempInt = int.Parse(curdata[0], System.Globalization.NumberStyles.Number);
+                curNum = int.Parse(curdata[0], System.Globalization.NumberStyles.Number);//当前单元号
+                curLC=curdata[1];//当前工况名称
+
+                 //取得内力数据
                 for (int k = 0; k < 6; k++)
                 {
                     tempDouble[k] = double.Parse(curdata[k+3], System.Globalization.NumberStyles.Float);
@@ -3358,12 +3381,96 @@ namespace MidasGenModel.model
                 //建立截面内力
                 SecForce sec1 = new SecForce(tempDouble[0],tempDouble[3],tempDouble[1],
                     tempDouble[2],tempDouble[4],tempDouble[5]);
+
+                #region 往模型数据结构中添加
+                if (this.elemforce.ContainsKey(curNum))//如果已有当前单元
+                {
+                    if (this.elemforce[curNum].hasLC(curLC))//如果已有当前组合
+                    {
+                        SortedList<string,ElemForce> tempEF= this.elemforce[curNum].LCForces;
+                        ;
+                        if (curdata[2].StartsWith("I"))
+                        {
+                            tempEF[curLC].SetElemForce(sec1, 0);
+                        }
+                        else if (curdata[2].StartsWith("J"))
+                        {
+                            tempEF[curLC].SetElemForce(sec1, 8);
+                        }
+                        else if (curdata[2] == "1/4")
+                        {
+                            tempEF[curLC].SetElemForce(sec1, 2);
+                        }
+                        else if (curdata[2] == "2/4")
+                        {
+                            tempEF[curLC].SetElemForce(sec1, 4);
+                        }
+                        else if (curdata[2] == "3/4")
+                        {
+                            tempEF[curLC].SetElemForce(sec1, 6);
+                        }
+
+                        this.elemforce[curNum].LCForces = tempEF;//反回的到模型数据库中
+                    }
+                    else
+                    {
+                        ElemForce ef = new ElemForce();
+                        if (curdata[2].StartsWith("I"))
+                        {
+                            ef.SetElemForce(sec1, 0);
+                        }
+                        else if (curdata[2].StartsWith("J"))
+                        {
+                            ef.SetElemForce(sec1, 8);
+                        }
+                        else if (curdata[2] == "1/4")
+                        {
+                            ef.SetElemForce(sec1, 2);
+                        }
+                        else if (curdata[2] == "2/4")
+                        {
+                            ef.SetElemForce(sec1, 4);
+                        }
+                        else if (curdata[2] == "3/4")
+                        {
+                            ef.SetElemForce(sec1, 6);
+                        }
+                        this.elemforce[curNum].add_LCForce(curLC, ef);
+                    }
+                }
+                else
+                {
+                    ElemForce ef = new ElemForce();
+
+                    if (curdata[2].StartsWith("I"))
+                    {
+                        ef.SetElemForce(sec1, 0);
+                    }
+                    else if (curdata[2].StartsWith("J"))
+                    {
+                        ef.SetElemForce(sec1, 8);
+                    }
+                    else if (curdata[2] == "1/4")
+                    {
+                        ef.SetElemForce(sec1, 2);
+                    }
+                    else if (curdata[2] == "2/4")
+                    {
+                        ef.SetElemForce(sec1, 4);
+                    }
+                    else if (curdata[2] == "3/4")
+                    {
+                        ef.SetElemForce(sec1, 6);
+                    }
+
+                    BElemForceTable eft=new BElemForceTable ();
+                    eft.add_LCForce(curLC,ef);
+                    this.elemforce.Add(curNum,new BElemForceTable ());
+                }
+                #endregion
                 i++;
-                
-                string ss = curdata[0];
             }
             reader.Close();
-            MessageBox.Show(i.ToString());
         }
         #endregion
     }

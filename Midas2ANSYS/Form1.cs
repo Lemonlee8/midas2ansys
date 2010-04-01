@@ -100,6 +100,10 @@ namespace Midas2ANSYS
             string path =Path.ChangeExtension(tb_mgt.Text,".nl");
             Bmodel mm = MidasGenModel.Application.ReadModelBinary(modelpath);
             mm.ReadElemForces(path);
+
+            //存储带内力的模型
+            string modelpath2=Path.ChangeExtension(modelpath,".ga2");
+            MidasGenModel.Application.WriteModelBinary(mm, modelpath2);
         }
     
     }
