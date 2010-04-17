@@ -113,6 +113,60 @@ namespace MidasGenModel.model
         /// </summary>
         USER
     }
+
+    /// <summary>
+    /// 荷载组合的种类
+    /// </summary>
+    public enum LCKind
+    {
+        /// <summary>
+        /// General组合
+        /// </summary>
+        GEN,
+        /// <summary>
+        /// 钢结构设计用组合
+        /// </summary>
+        STEEL,
+        /// <summary>
+        /// 混凝土设计用组合
+        /// </summary>
+        CONC,
+        /// <summary>
+        /// SRC设计用组合
+        /// </summary>
+        SRC,
+        /// <summary>
+        /// 基础设计用组合
+        /// </summary>
+        FDN
+    }
+
+    /// <summary>
+    /// 单位荷载条件种类
+    /// </summary>
+    public enum ANAL
+    {
+        /// <summary>
+        /// Static 静力
+        /// </summary>
+        ST,
+        /// <summary>
+        /// Response Spectrum 反应谱
+        /// </summary>
+        RS,
+        /// <summary>
+        /// Time History 时程
+        /// </summary>
+        TH,
+        /// <summary>
+        /// Moving 移动
+        /// </summary>
+        MV,
+        /// <summary>
+        /// Settlement 沉降
+        /// </summary>
+        SM
+    }
     /// <summary>
     ///加载方向 
     /// </summary>
@@ -157,6 +211,76 @@ namespace MidasGenModel.model
         /// 荷载工况类型
         /// </summary>
         public LCType LCType;
+    }
+
+    /// <summary>
+    /// 荷载工况组和系数对
+    /// </summary>
+    [Serializable]
+    public class BLCFactGroup
+    {
+        public ANAL ANAL;//单位荷载条件的种类
+        public string  LCNAME;//工况名称
+        public double FACT;//单位荷载条件的荷载系数
+    }
+    /// <summary>
+    /// 荷载组合类
+    /// </summary>
+    [Serializable]
+    public class BLoadComb
+    {
+        protected string _NAME;//荷载组合条件的名称
+        protected LCKind _KIND;//荷载组合的种类
+        protected bool _bACTIVE;//是否激活
+        protected bool _bES;//不清楚的参数：一般多为NO
+        protected int _iTYPE;//指定荷载组合方式：0为线性，1为+SRSS,2为-SRSS
+        protected string _DESC;//简单说明
+        protected List<BLCFactGroup> _LoadCombData;//荷载组合数据,一般为mgt文件第二行后数据
+
+        /// <summary>
+        /// 荷载组合条件的名称
+        /// </summary>
+        public string NAME
+        {
+            get { return _NAME; }
+            set { _NAME = value; }
+        }
+        /// <summary>
+        /// 荷载组合的种类
+        /// </summary>
+        public LCKind KIND
+        {
+            get { return _KIND; }
+        }
+
+        /// <summary>
+        /// 设置组合基本信息
+        /// </summary>
+        /// <param name="Name">组合条件名称</param>
+        /// <param name="Kind">荷载组合种类</param>
+        /// <param name="bActive">是否激活</param>
+        /// <param name="bEs">不清楚的参数：一般多为NO</param>
+        /// <param name="iType">指定荷载组合方式：0为线性，1为+SRSS,2为-SRSS</param>
+        /// <param name="Desc">简单说明</param>
+        public void SetData1(string Name, LCKind Kind, bool bActive, bool bEs,
+            int iType, string Desc)
+        {
+            _NAME = Name;
+            _KIND = Kind;
+            _bACTIVE = bActive;
+            _bES = bEs;
+            _iTYPE = iType;
+            _DESC = Desc;
+        }
+
+        /// <summary>
+        /// 添加荷载工况组和系数对入当前组合
+        /// </summary>
+        /// <param name="lcfg">荷载工况组和系数对</param>
+        public void AddLCFactGroup(BLCFactGroup lcfg)
+        {
+            _LoadCombData.Add(lcfg);
+        }
     }
     /// <summary>
     /// 荷载类
