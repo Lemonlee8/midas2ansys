@@ -2389,6 +2389,11 @@ namespace MidasGenModel.model
         public List<BLoadCase> STLDCASE;
 
         /// <summary>
+        /// 荷载组合列表
+        /// </summary>
+        public SortedList<string, BLoadComb> LOADCOMBS;
+
+        /// <summary>
         /// 节点荷载链表
         /// </summary>
         public SortedList<int, BNLoad> conloads;
@@ -2429,6 +2434,7 @@ namespace MidasGenModel.model
             constraint = new List<BConstraint>();
 
             STLDCASE = new List<BLoadCase>();
+            LOADCOMBS = new SortedList<string, BLoadComb>();
             conloads = new SortedList<int, BNLoad>(new RepeatedKeySort());//节点荷载
             beamloads = new SortedList<int, BBLoad>(new RepeatedKeySort());//梁单元荷载
             selfweight = new SortedList<string, BWeight>();//自重信息
@@ -3098,9 +3104,117 @@ namespace MidasGenModel.model
                 #endregion
             }
             reader.Close();
+            #region 再次打开文件并读取
+            FileStream str = File.Open(FilePath, FileMode.Open, FileAccess.Read);
+            StreamReader sr = new StreamReader(str);
+            ReadLoadComb(ref sr);   //读取荷载组合
+            sr.Close();
+            #endregion
 
             Normalize();//模型标准化处理
             GenBeamKpoint();//计算模型中梁单元的节点方向点信息
+        }
+
+        /// <summary>
+        /// 读取荷载组合列表
+        /// </summary>
+        /// <param name="srt">文件流</param>
+        public void ReadLoadComb(ref StreamReader srt)
+        {
+            /* 1、准备*/
+            bool bRead = false;                     //是否可以读取
+            String strText = null;                  //当前行文本
+            String strStartFlag = "*LOADCOMB";      //数据开始标志
+            String strEndFlag = "";                 //数据结束标志
+            char szSplit = ',';                     //数据分隔符
+
+            /* 2、循环读取*/
+            bool bReadCurLine = true;
+            for (strText = srt.ReadLine(); strText != null; strText = srt.ReadLine())
+            {
+                /* 2.1、判断是否读到数据。若读到，设置标志，进入下一轮循环开始读取；若没有读到，继续进入下一轮判断。*/
+                /* 2.2、bRead=true，表示已经可以读数据了。读的时候要判断是否已经读完数据。*/
+                if (!bRead)
+                {
+                    if (strText.StartsWith(strStartFlag))
+                    {
+                        bRead = true;
+                    }
+                    continue;
+                }
+                else if (strText.StartsWith(";"))//如果为注释则忽略
+                    continue;
+                else if (strText.CompareTo(strEndFlag) == 0)
+                    return;
+                else 
+                {
+                    /* todo:真正的读取过程......*/
+                    //string[] sArray = strText.Split(szSplit);
+                    //if (String.Compare(sArray.ElementAt(1).ToString().Trim(), "STEEL", true) != 0)
+                    //{
+                    //    bReadCurLine = true;
+                    //    continue;
+                    //}
+
+                    //    LoadComb loadComb = new LoadComb();
+                    //    string[] sArrayCur = sArray.ElementAt(0).ToString().Trim().Split('=');
+                    //    if (sArrayCur.Count() == 2)
+                    //    {
+                    //        loadComb.m_strLoadCombName = sArrayCur.ElementAt(1).ToString().Trim();
+                    //    }
+                    //    loadComb.m_nLoadCombType = Convert.ToInt32(sArray.ElementAt(4).ToString().Trim());
+                    //    if (loadComb.m_nLoadCombType == 0)
+                    //    {
+                    //        loadComb.m_strNote = sArray.ElementAt(5).ToString().Trim();
+                    //        loadComb.m_strLoadCombName = loadComb.m_strLoadCombName + "_" + loadComb.m_strNote;
+
+                    //        sArrayCur = sArray.ElementAt(5).ToString().Trim().Split('+');
+                    //        loadComb.m_nLoadCount = sArrayCur.Count();
+
+                    //        strText = srt.ReadLine().ToString();
+                    //        sArray = strText.Split(szSplit);
+                    //        int nBy = 3;
+                    //        for (int i = 0; i < sArray.Count(); i++)
+                    //        {
+                    //            int nRes = i % nBy;
+                    //            if (i == 0 || nRes == 0)
+                    //                continue;
+                    //            if (nRes == 1)
+                    //                loadComb.m_lstLoadName.Add(sArray.ElementAt(i).ToString().Trim());
+                    //            else if (nRes == 2)
+                    //                loadComb.m_lstLoadCoe.Add(Convert.ToDouble(sArray.ElementAt(i).ToString().Trim()));
+                    //        }
+                    //        bReadCurLine = true;
+                    //    }
+                    //    else if (loadComb.m_nLoadCombType == 1)
+                    //    {
+                    //        strText = srt.ReadLine().ToString();
+                    //        sArray = strText.Split(szSplit);
+                    //        sArrayCur = sArray.ElementAt(0).ToString().Trim().Split('=');
+                    //        while (String.Compare(sArrayCur.ElementAt(0).ToString().Trim(), "NAME", true) != 0)
+                    //        {
+                    //            int nBy = 3;
+                    //            for (int i = 0; i < sArray.Count(); i++)
+                    //            {
+                    //                int nRes = i % nBy;
+                    //                if (i == 0 || nRes == 0)
+                    //                    continue;
+                    //                if (nRes == 1)
+                    //                    loadComb.m_lstLoadName.Add(sArray.ElementAt(i).ToString().Trim());
+                    //                else if (nRes == 2)
+                    //                    loadComb.m_lstLoadCoe.Add(Convert.ToDouble(sArray.ElementAt(i).ToString().Trim()));
+                    //            }
+
+                    //            strText = srt.ReadLine().ToString();
+                    //            sArray = strText.Split(szSplit);
+                    //            sArrayCur = sArray.ElementAt(0).ToString().Trim().Split('=');
+                    //        }
+                    //        bReadCurLine = false;
+                    //    }
+                    //    m_sortLstLoadComb.Add(loadComb.m_strLoadCombName, loadComb);
+                    //}
+                }
+            }
         }
 
         /// <summary>
