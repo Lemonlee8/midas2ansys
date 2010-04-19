@@ -233,7 +233,7 @@ namespace MidasGenModel.model
         protected LCKind _KIND;//荷载组合的种类
         protected bool _bACTIVE;//是否激活
         protected bool _bES;//不清楚的参数：一般多为NO
-        protected int _iTYPE;//指定荷载组合方式：0为线性，1为+SRSS,2为-SRSS
+        protected int _iTYPE;//指定荷载组合方式：0为线性，1为+SRSS,2为-SRSS，3为平方开根号
         protected string _DESC;//简单说明
         protected List<BLCFactGroup> _LoadCombData;//荷载组合数据,一般为mgt文件第二行后数据
 
@@ -3129,7 +3129,8 @@ namespace MidasGenModel.model
             char szSplit = ',';                     //数据分隔符
 
             /* 2、循环读取*/
-            bool bReadCurLine = true;
+            bool bReadNewComb = true;
+            BLoadComb blc = new BLoadComb();        //当前荷载组合数据
             for (strText = srt.ReadLine(); strText != null; strText = srt.ReadLine())
             {
                 /* 2.1、判断是否读到数据。若读到，设置标志，进入下一轮循环开始读取；若没有读到，继续进入下一轮判断。*/
@@ -3148,6 +3149,34 @@ namespace MidasGenModel.model
                     return;
                 else 
                 {
+                    if (strText.Trim().StartsWith("NAME")&&bReadNewComb)
+                    {
+                        string[] sArrayCur=strText.Trim().Split(szSplit);
+                        string sName=sArrayCur[0].Substring(sArrayCur[0].IndexOf('=')+1);//组合名称
+                        LCKind kind=LCKind.GEN;//组合类型
+                        bool isActive=true;//是否激活
+                        bool bEs=false;
+                        switch(sArrayCur[1].Trim())
+                        {
+                            case "GEN":kind =LCKind.GEN;break ;
+                            case "STEEL":kind =LCKind.STEEL;break ;
+                            case "CONC":kind=LCKind.CONC;break;
+                            case "SRC":kind =LCKind.SRC;break;
+                            case "FDN":kind =LCKind.FDN;break;
+                            default:kind =LCKind.GEN;break;
+                        }
+                        if (sArrayCur[2].Trim()=="INACTIVE")
+                        {
+                            isActive=false;
+                        }
+                        if (sArrayCur[3].Trim()!="0")
+                            bEs=true;
+                        int Type=Convert.ToInt16(sArrayCur[4].Trim());
+                        blc.SetData1(sName, kind, isActive, bEs, Type, sArrayCur[5].Trim());
+                        bReadNewComb = false;//指标标签不读新数据
+                        continue;
+                    }
+                    
                     /* todo:真正的读取过程......*/
                     //string[] sArray = strText.Split(szSplit);
                     //if (String.Compare(sArray.ElementAt(1).ToString().Trim(), "STEEL", true) != 0)
