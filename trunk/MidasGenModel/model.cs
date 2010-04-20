@@ -3151,7 +3151,6 @@ namespace MidasGenModel.model
             char szSplit = ',';                     //数据分隔符
 
             /* 2、循环读取*/
-            BLoadComb blc = new BLoadComb();        //当前荷载组合数据
             string curName = null;                  //当前荷载组合名称
             for (strText = srt.ReadLine(); strText != null; strText = srt.ReadLine())
             {
@@ -3193,7 +3192,7 @@ namespace MidasGenModel.model
                     if (sArrayCur[3].Trim()!="0")
                         bEs=true;
                     int Type=Convert.ToInt16(sArrayCur[4].Trim());
-                    blc.Clear();
+                    BLoadComb blc = new BLoadComb();        //当前荷载组合数据
                     blc.SetData1(sName, kind, isActive, bEs, Type, sArrayCur[5].Trim());
                     curName = sName;//记录当前名称
                     LOADCOMBS.Add(sName, blc);
