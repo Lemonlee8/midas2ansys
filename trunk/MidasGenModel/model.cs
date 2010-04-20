@@ -254,6 +254,14 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        public BLoadComb()
+        {
+            _LoadCombData = new List<BLCFactGroup>();
+        }
+
+        /// <summary>
         /// 设置组合基本信息
         /// </summary>
         /// <param name="Name">组合条件名称</param>
@@ -280,6 +288,20 @@ namespace MidasGenModel.model
         public void AddLCFactGroup(BLCFactGroup lcfg)
         {
             _LoadCombData.Add(lcfg);
+        }
+
+        /// <summary>
+        /// 荷载组合初始化：移除所有组合数据
+        /// </summary>
+        public void Clear()
+        {
+            _NAME="";
+            _KIND=LCKind.GEN;
+            _bACTIVE=true;
+            _bES=false;
+            _iTYPE=0;
+            _DESC="";
+            _LoadCombData.Clear();//移除所有元素
         }
     }
     /// <summary>
@@ -3129,8 +3151,8 @@ namespace MidasGenModel.model
             char szSplit = ',';                     //数据分隔符
 
             /* 2、循环读取*/
-            bool bReadNewComb = true;
             BLoadComb blc = new BLoadComb();        //当前荷载组合数据
+            string curName = null;                  //当前荷载组合名称
             for (strText = srt.ReadLine(); strText != null; strText = srt.ReadLine())
             {
                 /* 2.1、判断是否读到数据。若读到，设置标志，进入下一轮循环开始读取；若没有读到，继续进入下一轮判断。*/
@@ -3147,102 +3169,62 @@ namespace MidasGenModel.model
                     continue;
                 else if (strText.CompareTo(strEndFlag) == 0)
                     return;
-                else 
-                {
-                    if (strText.Trim().StartsWith("NAME")&&bReadNewComb)
+                else if (strText.Trim().StartsWith("NAME"))
+                {   
+                    /*进入当前荷载组合基本数据读取*/
+                    string[] sArrayCur=strText.Trim().Split(szSplit);
+                    string sName=sArrayCur[0].Substring(sArrayCur[0].IndexOf('=')+1);//组合名称
+                    LCKind kind=LCKind.GEN;//组合类型
+                    bool isActive=true;//是否激活
+                    bool bEs=false;
+                    switch(sArrayCur[1].Trim())
                     {
-                        string[] sArrayCur=strText.Trim().Split(szSplit);
-                        string sName=sArrayCur[0].Substring(sArrayCur[0].IndexOf('=')+1);//组合名称
-                        LCKind kind=LCKind.GEN;//组合类型
-                        bool isActive=true;//是否激活
-                        bool bEs=false;
-                        switch(sArrayCur[1].Trim())
-                        {
-                            case "GEN":kind =LCKind.GEN;break ;
-                            case "STEEL":kind =LCKind.STEEL;break ;
-                            case "CONC":kind=LCKind.CONC;break;
-                            case "SRC":kind =LCKind.SRC;break;
-                            case "FDN":kind =LCKind.FDN;break;
-                            default:kind =LCKind.GEN;break;
-                        }
-                        if (sArrayCur[2].Trim()=="INACTIVE")
-                        {
-                            isActive=false;
-                        }
-                        if (sArrayCur[3].Trim()!="0")
-                            bEs=true;
-                        int Type=Convert.ToInt16(sArrayCur[4].Trim());
-                        blc.SetData1(sName, kind, isActive, bEs, Type, sArrayCur[5].Trim());
-                        bReadNewComb = false;//指标标签不读新数据
-                        continue;
+                        case "GEN":kind =LCKind.GEN;break ;
+                        case "STEEL":kind =LCKind.STEEL;break ;
+                        case "CONC":kind=LCKind.CONC;break;
+                        case "SRC":kind =LCKind.SRC;break;
+                        case "FDN":kind =LCKind.FDN;break;
+                        default:kind =LCKind.GEN;break;
                     }
-                    
-                    /* todo:真正的读取过程......*/
-                    //string[] sArray = strText.Split(szSplit);
-                    //if (String.Compare(sArray.ElementAt(1).ToString().Trim(), "STEEL", true) != 0)
-                    //{
-                    //    bReadCurLine = true;
-                    //    continue;
-                    //}
-
-                    //    LoadComb loadComb = new LoadComb();
-                    //    string[] sArrayCur = sArray.ElementAt(0).ToString().Trim().Split('=');
-                    //    if (sArrayCur.Count() == 2)
-                    //    {
-                    //        loadComb.m_strLoadCombName = sArrayCur.ElementAt(1).ToString().Trim();
-                    //    }
-                    //    loadComb.m_nLoadCombType = Convert.ToInt32(sArray.ElementAt(4).ToString().Trim());
-                    //    if (loadComb.m_nLoadCombType == 0)
-                    //    {
-                    //        loadComb.m_strNote = sArray.ElementAt(5).ToString().Trim();
-                    //        loadComb.m_strLoadCombName = loadComb.m_strLoadCombName + "_" + loadComb.m_strNote;
-
-                    //        sArrayCur = sArray.ElementAt(5).ToString().Trim().Split('+');
-                    //        loadComb.m_nLoadCount = sArrayCur.Count();
-
-                    //        strText = srt.ReadLine().ToString();
-                    //        sArray = strText.Split(szSplit);
-                    //        int nBy = 3;
-                    //        for (int i = 0; i < sArray.Count(); i++)
-                    //        {
-                    //            int nRes = i % nBy;
-                    //            if (i == 0 || nRes == 0)
-                    //                continue;
-                    //            if (nRes == 1)
-                    //                loadComb.m_lstLoadName.Add(sArray.ElementAt(i).ToString().Trim());
-                    //            else if (nRes == 2)
-                    //                loadComb.m_lstLoadCoe.Add(Convert.ToDouble(sArray.ElementAt(i).ToString().Trim()));
-                    //        }
-                    //        bReadCurLine = true;
-                    //    }
-                    //    else if (loadComb.m_nLoadCombType == 1)
-                    //    {
-                    //        strText = srt.ReadLine().ToString();
-                    //        sArray = strText.Split(szSplit);
-                    //        sArrayCur = sArray.ElementAt(0).ToString().Trim().Split('=');
-                    //        while (String.Compare(sArrayCur.ElementAt(0).ToString().Trim(), "NAME", true) != 0)
-                    //        {
-                    //            int nBy = 3;
-                    //            for (int i = 0; i < sArray.Count(); i++)
-                    //            {
-                    //                int nRes = i % nBy;
-                    //                if (i == 0 || nRes == 0)
-                    //                    continue;
-                    //                if (nRes == 1)
-                    //                    loadComb.m_lstLoadName.Add(sArray.ElementAt(i).ToString().Trim());
-                    //                else if (nRes == 2)
-                    //                    loadComb.m_lstLoadCoe.Add(Convert.ToDouble(sArray.ElementAt(i).ToString().Trim()));
-                    //            }
-
-                    //            strText = srt.ReadLine().ToString();
-                    //            sArray = strText.Split(szSplit);
-                    //            sArrayCur = sArray.ElementAt(0).ToString().Trim().Split('=');
-                    //        }
-                    //        bReadCurLine = false;
-                    //    }
-                    //    m_sortLstLoadComb.Add(loadComb.m_strLoadCombName, loadComb);
-                    //}
+                    if (sArrayCur[2].Trim()=="INACTIVE")
+                    {
+                        isActive=false;
+                    }
+                    if (sArrayCur[3].Trim()!="0")
+                        bEs=true;
+                    int Type=Convert.ToInt16(sArrayCur[4].Trim());
+                    blc.Clear();
+                    blc.SetData1(sName, kind, isActive, bEs, Type, sArrayCur[5].Trim());
+                    curName = sName;//记录当前名称
+                    LOADCOMBS.Add(sName, blc);
+                    continue;
                 }
+                else if (strText.StartsWith(" ")&&strText.Contains(szSplit.ToString()))
+                {
+                    /*进入当前荷载组合工况对添加*/
+                    BLoadComb tempBLC = LOADCOMBS[curName];//取出当前组合
+                    LOADCOMBS.Remove(curName);//从组合表中删除
+                    string[] sArrayCur = strText.Trim().Split(szSplit);                  
+                    for (int i = 0; i < sArrayCur.Length; i=i+3)
+                    {
+                        BLCFactGroup lcfg = new BLCFactGroup();
+                        switch (sArrayCur[i].Trim())
+                        {
+                            case "TH": lcfg.ANAL=ANAL.TH; break;
+                            case "SM": lcfg.ANAL = ANAL.SM; break;
+                            case "RS": lcfg.ANAL = ANAL.RS; break;
+                            case "MV": lcfg.ANAL = ANAL.MV; break;
+                            case "ST": lcfg.ANAL = ANAL.ST; break;
+                            default: lcfg.ANAL = ANAL.ST; break;
+                        }
+                        lcfg.LCNAME = sArrayCur[i + 1];
+                        lcfg.FACT = Convert.ToDouble(sArrayCur[i + 2]);
+                        tempBLC.AddLCFactGroup(lcfg);                        
+                    }
+                    LOADCOMBS.Add(tempBLC.NAME, tempBLC);//再添加到组合表中
+                }
+                else
+                    continue;
             }
         }
 
