@@ -1567,6 +1567,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 自定义SPC截面信息类
     /// </summary>
+    [Serializable]
     public class SectionGeneral : BSections
     {
         private Point2dCollection _OPOLY;
@@ -2883,12 +2884,12 @@ namespace MidasGenModel.model
                     }
                 }
                 else if (line.StartsWith(" ") && currentdata == "*SECT-GENERAL")//自定义截面
-                {                 
+                {   
                     if (line.Contains("SECT="))
                     {
                         SectionGeneral secGEN = new SectionGeneral();
                         temp = line.Trim().Remove(0, 5).Split(',');
-                        tempInt = int.Parse(temp[0], System.Globalization.NumberStyles.Integer);//截面编号
+                        tempInt = Convert.ToInt16(temp[0].Trim());//截面编号
                         SecType tt = (SecType)Enum.Parse(typeof(SecType), temp[1].Trim(), true);//截面类型(枚举解析)
                         secGEN.Num = tempInt;
                         secGEN.TYPE = tt;
@@ -2908,17 +2909,26 @@ namespace MidasGenModel.model
                             double .Parse(temp[3]),double.Parse(temp[4]),double.Parse(temp[5]));
                         line = reader.ReadLine();//第三行
                         temp = line.Split(',');
-                        //secGEN.setSecProp2(
+                        secGEN.setSecProp2(double.Parse(temp[0]), double.Parse(temp[1]), double.Parse(temp[2]),
+                            double.Parse(temp[3]), double.Parse(temp[4]), double.Parse(temp[5]),
+                            double.Parse(temp[6]), double.Parse(temp[7]), double.Parse(temp[8]),
+                            double.Parse(temp[9]));
+                        line = reader.ReadLine();//第四行
+                        temp = line.Split(',');
+                        secGEN.setSecProp3(double.Parse(temp[0]), double.Parse(temp[1]), double.Parse(temp[2]),
+                            double.Parse(temp[3]), double.Parse(temp[4]), double.Parse(temp[5]),
+                            double.Parse(temp[6]),double.Parse(temp[7]));
 
-                        Newsec = false;//指示后面还有数据
+                        sections.Add(tempInt,secGEN);//将截面添加入模型对象
+                        //Newsec = false;//指示后面还有数据
                     }
                     else if (line.Contains("OPOLY=")&&Newsec==false)
                     {
-
+                        //to do
                     }
                     else if (line.Contains("IPOLY="))
                     {
-
+                        //to do
                     }
                 }
                 #endregion
@@ -3799,6 +3809,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 2d点类
     /// </summary>
+    [Serializable]
     public class Point2d : Object
     {
         private double XX, YY;
@@ -3836,6 +3847,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 二维点集合
     /// </summary>
+    [Serializable]
     public class Point2dCollection:Object
     {
         private List<Point2d> _pts;
