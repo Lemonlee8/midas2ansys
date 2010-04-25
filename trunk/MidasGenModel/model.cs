@@ -1623,6 +1623,33 @@ namespace MidasGenModel.model
         {
             //throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// 给外轮廓线增加控制点
+        /// </summary>
+        /// <param name="pt">点对</param>
+        public void addtoOPOLY(Point2d pt)
+        {
+            _OPOLY.addPt(pt);
+        }
+        /// <summary>
+        /// 给内轮廓线增加控制点
+        /// </summary>
+        /// <param name="index">内轮廓线索引号</param>
+        /// <param name="pt">要增加的点对</param>
+        public void addtoIPOLY(int index, Point2d pt)
+        {
+            if (_IPOLYs.Count > index)
+            {
+                _IPOLYs[index].addPt(pt);
+            }
+            else
+            {
+                Point2dCollection ptnew=new Point2dCollection ();
+                ptnew.addPt(pt);
+                _IPOLYs.Add(ptnew);
+            }
+        }
     }
 
     /// <summary>
@@ -2606,8 +2633,10 @@ namespace MidasGenModel.model
             string currentdata = "notype";//指定当前数据类型
             string curLoadCase = "notype";//指定当前荷载工况
 
-            bool Newsec = true;//指示当前截面
-            bool NewPoly = true;//指示当前点对
+            int curSecNUM = 0;//当前截面号
+            string curSecPOLY = null;//指示当前截面点对
+            int IPOLY_num=0;//指示当前截面的内轮廓线数量
+
             //初始化模型信息数据
             //model = new Bmodel();
             //临时变量
@@ -2883,8 +2912,9 @@ namespace MidasGenModel.model
                         MessageBox.Show("解析常规截面属性出错！\n是否选用了不支持的截面数据类型？？", "错误信息", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
+                #region 自定义截面读取
                 else if (line.StartsWith(" ") && currentdata == "*SECT-GENERAL")//自定义截面
-                {   
+                {
                     if (line.Contains("SECT="))
                     {
                         SectionGeneral secGEN = new SectionGeneral();
@@ -2892,6 +2922,9 @@ namespace MidasGenModel.model
                         tempInt = Convert.ToInt16(temp[0].Trim());//截面编号
                         SecType tt = (SecType)Enum.Parse(typeof(SecType), temp[1].Trim(), true);//截面类型(枚举解析)
                         secGEN.Num = tempInt;
+                        curSecNUM = tempInt;//指定当前截面号，用于截面其它信息读取
+                        curSecPOLY = null;//指定当前截面轮廓符号
+                        IPOLY_num = 0;//指针指向零
                         secGEN.TYPE = tt;
                         secGEN.Name = temp[2].Trim();
                         secGEN.OFFSET.Add(temp[3].Trim());
@@ -2920,17 +2953,76 @@ namespace MidasGenModel.model
                             double.Parse(temp[6]),double.Parse(temp[7]));
 
                         sections.Add(tempInt,secGEN);//将截面添加入模型对象
-                        //Newsec = false;//指示后面还有数据
                     }
-                    else if (line.Contains("OPOLY=")&&Newsec==false)
+                    else if (line.Contains("OPOLY="))//含有OPOLY=的行
                     {
-                        //to do
+                        curSecPOLY = "OPOLY";//指示当前点对符号
+                        temp = line.Trim().Remove(0, 6).Split(',');
+                        if (sections[curSecNUM] is SectionGeneral)
+                        {
+                            SectionGeneral SGtemp = sections[curSecNUM] as SectionGeneral;
+                            for (int i = 0; i < temp.Length; i = i + 2)
+                            {
+                                double d1 = Convert.ToDouble(temp[i]);
+                                double d2 = Convert.ToDouble(temp[i + 1]);
+                                SGtemp.addtoOPOLY(new Point2d(d1, d2));
+                            }
+                            sections.Remove(curSecNUM);//删除现有截面
+                            sections.Add(curSecNUM, SGtemp);//增加新的截面
+                        }
                     }
-                    else if (line.Contains("IPOLY="))
+                    else if (line.Contains("IPOLY="))//含有IPOLY=的行
                     {
-                        //to do
+                        curSecPOLY = "IPOLY";//指示当前点对符号
+                        IPOLY_num++;
+                        temp = line.Trim().Remove(0, 6).Split(',');
+                        if (sections[curSecNUM] is SectionGeneral)
+                        {
+                            SectionGeneral SGtemp = sections[curSecNUM] as SectionGeneral;
+                            for (int i = 0; i < temp.Length; i = i + 2)
+                            {
+                                double d1 = Convert.ToDouble(temp[i]);
+                                double d2 = Convert.ToDouble(temp[i + 1]);
+                                SGtemp.addtoIPOLY(IPOLY_num - 1, new Point2d(d1, d2));
+                            }
+                            sections.Remove(curSecNUM);//删除现有截面
+                            sections.Add(curSecNUM, SGtemp);//增加新的截面
+                        }
+                    }
+                    else if (curSecPOLY == "OPOLY")//不含有OPOLY=的行
+                    {
+                        temp = line.Trim().Split(',');
+                        if (sections[curSecNUM] is SectionGeneral)
+                        {
+                            SectionGeneral SGtemp = sections[curSecNUM] as SectionGeneral;
+                            for (int i = 0; i < temp.Length; i = i + 2)
+                            {
+                                double d1 = Convert.ToDouble(temp[i]);
+                                double d2 = Convert.ToDouble(temp[i + 1]);
+                                SGtemp.addtoOPOLY(new Point2d(d1, d2));
+                            }
+                            sections.Remove(curSecNUM);//删除现有截面
+                            sections.Add(curSecNUM, SGtemp);//增加新的截面
+                        }
+                    }
+                    else if (curSecPOLY=="IPOLY")//不含有IPOLY=的行
+                    {
+                        temp = line.Trim().Split(',');
+                        if (sections[curSecNUM] is SectionGeneral)
+                        {
+                            SectionGeneral SGtemp = sections[curSecNUM] as SectionGeneral;
+                            for (int i = 0; i < temp.Length; i = i + 2)
+                            {
+                                double d1 = Convert.ToDouble(temp[i]);
+                                double d2 = Convert.ToDouble(temp[i + 1]);
+                                SGtemp.addtoIPOLY(IPOLY_num - 1, new Point2d(d1, d2));
+                            }
+                            sections.Remove(curSecNUM);//删除现有截面
+                            sections.Add(curSecNUM, SGtemp);//增加新的截面
+                        }
                     }
                 }
+                #endregion
                 #endregion
                 #region 板单元厚度数据读取
                 else if (line.StartsWith(" ") == true && currentdata == "*THICKNESS")
@@ -3826,7 +3918,7 @@ namespace MidasGenModel.model
         /// </summary>
         /// <param name="nx">节点X坐标</param>
         /// <param name="ny">节点Y坐标</param>
-        public Point2d(double nx, double ny, double nz)
+        public Point2d(double nx, double ny)
         {
             XX = nx;
             YY = ny;
