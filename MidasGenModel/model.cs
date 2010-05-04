@@ -252,7 +252,29 @@ namespace MidasGenModel.model
         {
             get { return _KIND; }
         }
-
+        /// <summary>
+        /// 荷载组合描述
+        /// </summary>
+        public string DESC
+        {
+            get { return _DESC; }
+            set {_DESC=value;}
+        }
+        /// <summary>
+        /// 当前组合是否激活
+        /// </summary>
+        public bool bACTIVE
+        {
+            get { return _bACTIVE; }
+            set { _bACTIVE = value; }
+        }
+        /// <summary>
+        /// 指定荷载组合方式：0为线性，1为+SRSS,2为-SRSS，3为平方开根号
+        /// </summary>
+        public int iTYPE
+        {
+            get { return _iTYPE; }
+        }
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -2484,7 +2506,7 @@ namespace MidasGenModel.model
             constraint = new List<BConstraint>();
 
             STLDCASE = new List<BLoadCase>();
-            LOADCOMBS = new SortedList<string, BLoadComb>();
+            LOADCOMBS = new SortedList<string, BLoadComb>(new NoAutoSort());//荷载组合
             conloads = new SortedList<int, BNLoad>(new RepeatedKeySort());//节点荷载
             beamloads = new SortedList<int, BBLoad>(new RepeatedKeySort());//梁单元荷载
             selfweight = new SortedList<string, BWeight>();//自重信息
@@ -3230,7 +3252,7 @@ namespace MidasGenModel.model
             reader.Close();
             #region 再次打开文件并读取
             FileStream str = File.Open(FilePath, FileMode.Open, FileAccess.Read);
-            StreamReader sr = new StreamReader(str);
+            StreamReader sr = new StreamReader(str,Encoding.Default);//用系统默认编码打开
             ReadLoadComb(ref sr);   //读取荷载组合
             sr.Close();
             #endregion
@@ -3995,6 +4017,24 @@ namespace MidasGenModel.model
             return iResult;
         }
         #endregion
+    }
+    /// <summary>
+    /// 实现SortedList不自动排序功能
+    /// </summary>
+    [Serializable]
+    public class NoAutoSort : IComparer<string>
+    {
+        public int Compare(string x, string y)
+        {
+            int iResult = string.Compare(x,y);
+            if (iResult != 0)
+                iResult = -1;
+            return iResult;
+            //排序
+            // int iResult = (int)x - (int)y;
+            // if(iResult == 0) iResult = -1;
+            // return iResult;
+        }
     }
     #endregion 
 }
