@@ -99,12 +99,19 @@ namespace Midas2ANSYS
             string modelpath = Path.ChangeExtension(tb_mgt.Text, ".ga1");
             string path =Path.ChangeExtension(tb_mgt.Text,".nl");
             MidasGenModel.model.Bmodel mm = new Bmodel();
-            MidasGenModel.Application.ReadModelBinary(modelpath,ref mm);
+            //MidasGenModel.Application.ReadModelBinary(modelpath,ref mm);
+            mm.ReadFromMgt(tb_mgt.Text);
             mm.ReadElemForces(path);
 
             //存储带内力的模型
             string modelpath2=Path.ChangeExtension(modelpath,".ga2");
             MidasGenModel.Application.WriteModelBinary(mm, modelpath2);
+
+            //计算组合内力
+            bool tt = mm.LoadCombs.ContainsKey("gStr1");
+            BLoadComb comb = mm.LoadCombs["gStr1"] as BLoadComb;
+            ElemForce ef = mm.CalElemForceComb(comb, 4);
+            MessageBox.Show("OK");
         }
     
     }

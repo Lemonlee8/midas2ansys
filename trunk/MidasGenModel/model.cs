@@ -165,7 +165,11 @@ namespace MidasGenModel.model
         /// <summary>
         /// Settlement 沉降
         /// </summary>
-        SM
+        SM,
+        /// <summary>
+        /// 组合
+        /// </summary>
+        CB
     }
     /// <summary>
     ///加载方向 
@@ -219,9 +223,18 @@ namespace MidasGenModel.model
     [Serializable]
     public class BLCFactGroup
     {
-        public ANAL ANAL;//单位荷载条件的种类
-        public string  LCNAME;//工况名称
-        public double FACT;//单位荷载条件的荷载系数
+        /// <summary>
+        /// 单位荷载条件的种类
+        /// </summary>
+        public ANAL ANAL;
+        /// <summary>
+        /// 工况名称
+        /// </summary>
+        public string  LCNAME;
+        /// <summary>
+        /// 单位荷载条件的荷载系数
+        /// </summary>
+        public double FACT;
     }
     /// <summary>
     /// 荷载组合类
@@ -275,6 +288,22 @@ namespace MidasGenModel.model
         {
             get { return _iTYPE; }
         }
+
+        /// <summary>
+        /// 取得工况组的数量
+        /// </summary>
+        public int Num_LCGroup
+        {
+            get { return _LoadCombData.Count; }
+        }
+
+        /// <summary>
+        /// 荷载工况系数对数据
+        /// </summary>
+        public List<BLCFactGroup> LoadCombData
+        {
+            get { return _LoadCombData; }
+        }
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -324,6 +353,23 @@ namespace MidasGenModel.model
             _iTYPE=0;
             _DESC="";
             _LoadCombData.Clear();//移除所有元素
+        }
+
+        /// <summary>
+        /// 判断当前组合是否含有某个工况
+        /// </summary>
+        /// <param name="LCName">工况名</param>
+        /// <returns>含有为true</returns>
+        public bool hasLC(string LCName)
+        {
+            foreach (BLCFactGroup bfg in _LoadCombData)
+            {
+                if (bfg.LCNAME == LCName)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
     /// <summary>
@@ -2238,6 +2284,32 @@ namespace MidasGenModel.model
             _Vy = Vy; _Vz = Vz;
             _My = My; _Mz = Mz;
         }
+
+        /// <summary>
+        /// 截面内力相加重载方法
+        /// </summary>
+        /// <param name="sf1">截面内力1</param>
+        /// <param name="sf2">截面内力2</param>
+        /// <returns>相加后的截面内力</returns>
+        public static SecForce operator +(SecForce sf1, SecForce sf2)
+        {
+            SecForce res = new SecForce();
+            res.SetAllForces(sf1.N + sf2.N, sf1.T + sf2.T, sf1.Vy + sf2.Vy,
+                sf1.Vz + sf2.Vz, sf1.My + sf2.My, sf1.Mz + sf2.Mz);
+            return res;
+        }
+
+        /// <summary>
+        /// 截面内力自乘系数
+        /// </summary>
+        /// <param name="fact">因子</param>
+        /// <returns>截面内力</returns>
+        public  SecForce Mutiplyby(double fact)
+        {
+            SecForce res = new SecForce(N * fact, T * fact, Vy * fact,
+                Vz * fact, My * fact, Mz * fact);
+            return res;
+        }
     }
     /// <summary>
     /// 存储单元内力的类
@@ -2320,12 +2392,24 @@ namespace MidasGenModel.model
         }
         #endregion
         #region 类方法
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public ElemForce()
+        {
+            SecForce sf = new SecForce();
+            for (int i = 0; i < 9; i++)
+            {
+                this[i] = sf;
+            }
+        }
         /// <summary>
         /// 输入单元内力
         /// </summary>
         /// <param name="Fi">单元i端截面内力</param>
         /// <param name="Fj">单元j端截面内力</param>
-        public void  SetElemForce(SecForce Fi,SecForce Fj)
+        public void SetElemForce(SecForce Fi, SecForce Fj)
         {
             _Force_i = Fi;
             _Force_j = Fj;
@@ -2361,6 +2445,79 @@ namespace MidasGenModel.model
                 case 8: _Force_j = F; break;
                 default: break;
             }
+        }
+
+
+        /// <summary>
+        /// 索引器
+        /// </summary>
+        /// <param name="index">索引号</param>
+        /// <returns>返回截面内力</returns>
+        public SecForce this[int index]
+        {
+            get
+            {
+                switch (index)
+                {
+                    case 0:return _Force_i;
+                    case 1:return _Force_18;
+                    case 2:return _Force_28; 
+                    case 3:return _Force_38;
+                    case 4:return _Force_48; 
+                    case 5:return _Force_58; 
+                    case 6:return _Force_68; 
+                    case 7:return _Force_78; 
+                    case 8:return _Force_j;
+                    default: return new SecForce();
+                }
+            }
+            set
+            {
+                switch (index)
+                {
+                    case 0: _Force_i = value; break;
+                    case 1: _Force_18 = value; break;
+                    case 2: _Force_28 = value; break;
+                    case 3: _Force_38 = value; break;
+                    case 4: _Force_48 = value; break;
+                    case 5: _Force_58 = value; break;
+                    case 6: _Force_68 = value; break;
+                    case 7: _Force_78 = value; break;
+                    case 8: _Force_j =value; break;
+                    default: break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 重载单元内力相加运算符
+        /// </summary>
+        /// <param name="ef1">单元内力1</param>
+        /// <param name="ef2">单元内力2</param>
+        /// <returns>相加后的单元内力</returns>
+        public static ElemForce operator +(ElemForce ef1, ElemForce ef2)
+        {
+            ElemForce res = new ElemForce();
+            for (int i = 0; i < 9; i++)
+            {
+                res[i] = ef1[i] + ef2[i];
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// 单元内力自乘系数
+        /// </summary>
+        /// <param name="fact">系数</param>
+        /// <returns>单元内力</returns>
+        public ElemForce Mutiplyby(double fact)
+        {
+            ElemForce res = new ElemForce();
+            for (int i = 0; i < 9; i++)
+            {
+                res[i]=this[i].Mutiplyby(fact);
+            }
+            return res;
         }
         #endregion
     }
@@ -2463,7 +2620,8 @@ namespace MidasGenModel.model
         /// <summary>
         /// 荷载组合列表
         /// </summary>
-        public SortedList<string, BLoadComb> LOADCOMBS;
+        //public SortedList<string, BLoadComb> LOADCOMBS;
+        private Hashtable _LoadCombs;
 
         /// <summary>
         /// 节点荷载链表
@@ -2491,8 +2649,17 @@ namespace MidasGenModel.model
         public SortedList<int, BElemForceTable> elemforce;
         #endregion
 
+        #region 属性
         /// <summary>
-        /// 初始化模型数据
+        /// 荷载组合字典
+        /// </summary>
+        public Hashtable LoadCombs
+        {
+            get { return _LoadCombs; }
+        }
+        #endregion
+        /// <summary>
+        /// 构造函数
         /// </summary>
         public Bmodel()
         {
@@ -2506,7 +2673,8 @@ namespace MidasGenModel.model
             constraint = new List<BConstraint>();
 
             STLDCASE = new List<BLoadCase>();
-            LOADCOMBS = new SortedList<string, BLoadComb>(new NoAutoSort());//荷载组合
+            //LOADCOMBS = new SortedList<string, BLoadComb>(new NoAutoSort());
+            _LoadCombs = new Hashtable();//荷载组合
             conloads = new SortedList<int, BNLoad>(new RepeatedKeySort());//节点荷载
             beamloads = new SortedList<int, BBLoad>(new RepeatedKeySort());//梁单元荷载
             selfweight = new SortedList<string, BWeight>();//自重信息
@@ -2514,6 +2682,7 @@ namespace MidasGenModel.model
 
             elemforce = new SortedList<int, BElemForceTable>();//单元内力表
         }
+        #region 模型处理方法
         /// <summary>
         /// 转化梁单元关键点信息
         /// </summary>
@@ -2623,7 +2792,6 @@ namespace MidasGenModel.model
             return pt_out;//反回坐标点
         }
 
-        #region model类方法
         /// <summary>
         ///对模型数据进行标准化处理
         /// </summary>
@@ -2642,10 +2810,54 @@ namespace MidasGenModel.model
                     }
                 }
                 sec.CalculateSecProp();//计算截面特性
-            //todo:当输入截面为数据库截面时，进行截面参数转化
+                //todo:当输入截面为数据库截面时，进行截面参数转化
             }
         }
 
+        /// <summary>
+        /// 添加荷载组合入模型
+        /// </summary>
+        /// <param name="com"></param>
+        public void addLoadComb(BLoadComb com)
+        {
+            _LoadCombs.Add(com.NAME,com);
+        }
+
+        /// <summary>
+        /// 计算指定单元的单元组合内力
+        /// </summary>
+        /// <param name="com">组合名称</param>
+        /// <param name="iElem">单元号</param>
+        /// <returns>单元内力</returns>
+        public  ElemForce CalElemForceComb(BLoadComb com, int iElem)
+        {
+            ElemForce res = new ElemForce();//要返回的结果
+
+            List<BLCFactGroup> comdata = com.LoadCombData;            
+            if (com.iTYPE == 0)//如果为线性组合
+            {
+                foreach (BLCFactGroup lfg in comdata)
+                {
+                    ElemForce ef = elemforce[iElem].LCForces[lfg.LCNAME];//当前组合单元力
+                    res=res+ef.Mutiplyby(lfg.FACT);
+                }
+            }
+            else if (com.iTYPE == 1)//如果为+SRSS
+            {
+
+            }
+            else if (com.iTYPE == 2)//如果为-SRSS
+            {
+
+            }
+            else if (com.iTYPE==3)//如果为平方开根号
+            {
+
+            }
+            return res;
+        }
+        #endregion
+        #region model类输入输出接口方法
         /// <summary>
         /// 读取mgt文件信息
         /// </summary>
@@ -3127,7 +3339,7 @@ namespace MidasGenModel.model
                     try
                     {
                         BLoadCase lcdata = new BLoadCase();
-                        lcdata.LCName = temp[0];
+                        lcdata.LCName = temp[0].Trim();
 
                         switch (temp[1])
                         {
@@ -3296,7 +3508,7 @@ namespace MidasGenModel.model
                 {   
                     /*进入当前荷载组合基本数据读取*/
                     string[] sArrayCur=strText.Trim().Split(szSplit);
-                    string sName=sArrayCur[0].Substring(sArrayCur[0].IndexOf('=')+1);//组合名称
+                    string sName=sArrayCur[0].Substring(sArrayCur[0].IndexOf('=')+1).Trim();//组合名称
                     LCKind kind=LCKind.GEN;//组合类型
                     bool isActive=true;//是否激活
                     bool bEs=false;
@@ -3319,14 +3531,17 @@ namespace MidasGenModel.model
                     BLoadComb blc = new BLoadComb();        //当前荷载组合数据
                     blc.SetData1(sName, kind, isActive, bEs, Type, sArrayCur[5].Trim());
                     curName = sName;//记录当前名称
-                    LOADCOMBS.Add(sName, blc);
+                    //LOADCOMBS.Add(sName, blc);
+                    _LoadCombs.Add(sName,blc);//新的组合字典
                     continue;
                 }
                 else if (strText.StartsWith(" ")&&strText.Contains(szSplit.ToString()))
                 {
                     /*进入当前荷载组合工况对添加*/
-                    BLoadComb tempBLC = LOADCOMBS[curName];//取出当前组合
-                    LOADCOMBS.Remove(curName);//从组合表中删除
+                    //BLoadComb tempBLC = LOADCOMBS[curName];//取出当前组合
+                    BLoadComb tempBLC = _LoadCombs[curName] as BLoadComb;
+                    //LOADCOMBS.Remove(curName);//从组合表中删除
+                    _LoadCombs.Remove(curName);
                     string[] sArrayCur = strText.Trim().Split(szSplit);                  
                     for (int i = 0; i < sArrayCur.Length; i=i+3)
                     {
@@ -3338,13 +3553,15 @@ namespace MidasGenModel.model
                             case "RS": lcfg.ANAL = ANAL.RS; break;
                             case "MV": lcfg.ANAL = ANAL.MV; break;
                             case "ST": lcfg.ANAL = ANAL.ST; break;
+                            case "CB": lcfg.ANAL = ANAL.CB; break;
                             default: lcfg.ANAL = ANAL.ST; break;
                         }
-                        lcfg.LCNAME = sArrayCur[i + 1];
+                        lcfg.LCNAME = sArrayCur[i + 1].Trim();
                         lcfg.FACT = Convert.ToDouble(sArrayCur[i + 2]);
                         tempBLC.AddLCFactGroup(lcfg);                        
                     }
-                    LOADCOMBS.Add(tempBLC.NAME, tempBLC);//再添加到组合表中
+                    //LOADCOMBS.Add(tempBLC.NAME, tempBLC);//再添加到组合表中
+                    _LoadCombs.Add(tempBLC.NAME, tempBLC);
                 }
                 else
                     continue;
@@ -3722,7 +3939,7 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
-        /// 读取MIDAS输出的内力结果入模型///doing
+        /// 读取MIDAS输出的内力结果入模型
         /// </summary>
         /// <param name="MidasFile">MIDAS输出的单元内力表，单位默认为kN,m</param>
         public void ReadElemForces(string MidasForceFile)
@@ -3837,7 +4054,7 @@ namespace MidasGenModel.model
 
                     BElemForceTable eft=new BElemForceTable ();
                     eft.add_LCForce(curLC,ef);
-                    this.elemforce.Add(curNum,new BElemForceTable ());
+                    this.elemforce.Add(curNum,eft);
                 }
                 #endregion
                 i++;
