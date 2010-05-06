@@ -372,6 +372,120 @@ namespace MidasGenModel.model
             return false;
         }
     }
+
+    /// <summary>
+    /// 荷载组合表
+    /// </summary>
+    [Serializable]
+    public class BLoadCombTable
+    {
+        #region 数据成员
+        private List<string> _ComGen;//一般组合表
+        private List<string> _ComSteel;//钢结构验算用表
+        private List<string> _ComCon;//混凝土验算用表
+        private Hashtable _LoadCombData;//所有模型中组合数据哈希表
+        #endregion
+        #region 属性
+        /// <summary>
+        /// 一般组合表
+        /// </summary>
+        public List<string> ComGen
+        {
+            get { return _ComGen; }
+        }
+        /// <summary>
+        /// 钢结构验算用表
+        /// </summary>
+        public List<string> ComSteel
+        {
+            get { return _ComSteel; }
+        }
+        /// <summary>
+        /// 混凝土验算用表
+        /// </summary>
+        public List<string> ComCon
+        {
+            get { return _ComCon; }
+        }
+        /// <summary>
+        /// 模型中所有组合数据哈希表
+        /// </summary>
+        public Hashtable LoadCombData
+        {
+            get { return _LoadCombData; }
+        }
+        #endregion
+        #region 构造函数
+        public BLoadCombTable()
+        {
+            _ComGen = new List<string>();
+            _ComSteel = new List<string>();
+            _ComCon = new List<string>();
+            _LoadCombData = new Hashtable();
+        }
+        #endregion
+        #region 方法
+        /// <summary>
+        /// 索引器
+        /// </summary>
+        /// <param name="key">关键字</param>
+        /// <returns>荷载组合</returns>
+        public BLoadComb this[string key]
+        {
+            get
+            {
+                return _LoadCombData[key] as BLoadComb;
+            }
+        }
+        /// <summary>
+        /// 添加荷载组合数据入表
+        /// </summary>
+        /// <param name="com"></param>
+        public void  Add(BLoadComb com)
+        {
+            //记录原始组合顺序
+            switch (com.KIND)
+            {
+                case LCKind.GEN: _ComGen.Add(com.NAME); break;
+                case LCKind.STEEL: _ComSteel.Add(com.NAME); break;
+                case LCKind.CONC: _ComCon.Add(com.NAME); break;
+                default: _ComGen.Add(com.NAME); break;
+            }
+            _LoadCombData.Add(com.NAME, com);//添加数据
+        }
+        /// <summary>
+        /// 移除指定荷载组合
+        /// </summary>
+        /// <param name="comName"></param>
+        public void Remove(string comName)
+        {
+            //如果不包含此组合
+            if (!_LoadCombData.ContainsKey(comName))
+                return;
+            else
+            {
+                BLoadComb com = _LoadCombData[comName] as BLoadComb;
+                switch (com.KIND)
+                {
+                    case LCKind.GEN: _ComGen.Remove(comName); break;
+                    case LCKind.STEEL: _ComSteel.Remove(comName); break;
+                    case LCKind.CONC: _ComCon.Remove(comName); break;
+                    default: _ComGen.Remove(comName); break;
+                }
+                _LoadCombData.Remove(comName);//移除数据
+            }
+        }
+        /// <summary>
+        /// 查找组合表是否含有某个组合
+        /// </summary>
+        /// <param name="Key">组合关键字</param>
+        /// <returns>是或否</returns>
+        public bool ContainsKey(string Key)
+        {
+            return _LoadCombData.ContainsKey(Key);
+        }
+        #endregion
+    }
     /// <summary>
     /// 荷载类
     /// </summary>
@@ -2621,7 +2735,7 @@ namespace MidasGenModel.model
         /// 荷载组合列表
         /// </summary>
         //public SortedList<string, BLoadComb> LOADCOMBS;
-        private Hashtable _LoadCombs;
+         private BLoadCombTable _LoadCombTable;
 
         /// <summary>
         /// 节点荷载链表
@@ -2653,9 +2767,9 @@ namespace MidasGenModel.model
         /// <summary>
         /// 荷载组合字典
         /// </summary>
-        public Hashtable LoadCombs
+        public BLoadCombTable LoadCombTable
         {
-            get { return _LoadCombs; }
+            get { return _LoadCombTable; }
         }
         #endregion
         /// <summary>
@@ -2673,8 +2787,7 @@ namespace MidasGenModel.model
             constraint = new List<BConstraint>();
 
             STLDCASE = new List<BLoadCase>();
-            //LOADCOMBS = new SortedList<string, BLoadComb>(new NoAutoSort());
-            _LoadCombs = new Hashtable();//荷载组合
+            _LoadCombTable = new BLoadCombTable();//荷载组合表
             conloads = new SortedList<int, BNLoad>(new RepeatedKeySort());//节点荷载
             beamloads = new SortedList<int, BBLoad>(new RepeatedKeySort());//梁单元荷载
             selfweight = new SortedList<string, BWeight>();//自重信息
@@ -2818,9 +2931,9 @@ namespace MidasGenModel.model
         /// 添加荷载组合入模型
         /// </summary>
         /// <param name="com"></param>
-        public void addLoadComb(BLoadComb com)
+        public void AddLoadComb(BLoadComb com)
         {
-            _LoadCombs.Add(com.NAME,com);
+            _LoadCombTable.Add(com);
         }
 
         /// <summary>
@@ -3531,17 +3644,16 @@ namespace MidasGenModel.model
                     BLoadComb blc = new BLoadComb();        //当前荷载组合数据
                     blc.SetData1(sName, kind, isActive, bEs, Type, sArrayCur[5].Trim());
                     curName = sName;//记录当前名称
-                    //LOADCOMBS.Add(sName, blc);
-                    _LoadCombs.Add(sName,blc);//新的组合字典
+                    _LoadCombTable.Add(blc);
                     continue;
                 }
                 else if (strText.StartsWith(" ")&&strText.Contains(szSplit.ToString()))
                 {
                     /*进入当前荷载组合工况对添加*/
-                    //BLoadComb tempBLC = LOADCOMBS[curName];//取出当前组合
-                    BLoadComb tempBLC = _LoadCombs[curName] as BLoadComb;
-                    //LOADCOMBS.Remove(curName);//从组合表中删除
-                    _LoadCombs.Remove(curName);
+                    //BLoadComb tempBLC = LOADCOMBS[curName];
+                    BLoadComb tempBLC = _LoadCombTable[curName];//取出当前组合
+                    //LOADCOMBS.Remove(curName);
+                    _LoadCombTable.Remove(curName);//从组合表中删除
                     string[] sArrayCur = strText.Trim().Split(szSplit);                  
                     for (int i = 0; i < sArrayCur.Length; i=i+3)
                     {
@@ -3560,8 +3672,8 @@ namespace MidasGenModel.model
                         lcfg.FACT = Convert.ToDouble(sArrayCur[i + 2]);
                         tempBLC.AddLCFactGroup(lcfg);                        
                     }
-                    //LOADCOMBS.Add(tempBLC.NAME, tempBLC);//再添加到组合表中
-                    _LoadCombs.Add(tempBLC.NAME, tempBLC);
+                    _LoadCombTable.Add(tempBLC);//再添加到组合表中
+                    //_LoadCombs.Add(tempBLC.NAME, tempBLC);
                 }
                 else
                     continue;

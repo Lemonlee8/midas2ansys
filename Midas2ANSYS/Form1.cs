@@ -108,8 +108,8 @@ namespace Midas2ANSYS
             MidasGenModel.Application.WriteModelBinary(mm, modelpath2);
 
             //计算组合内力
-            bool tt = mm.LoadCombs.ContainsKey("gStr1");
-            BLoadComb comb = mm.LoadCombs["gStr1"] as BLoadComb;
+            bool tt = mm.LoadCombTable.ContainsKey("gStr1");
+            BLoadComb comb = mm.LoadCombTable["gStr1"];
             ElemForce ef = mm.CalElemForceComb(comb, 4);
             MessageBox.Show("OK");
         }
