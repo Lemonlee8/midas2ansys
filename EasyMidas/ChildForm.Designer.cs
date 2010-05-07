@@ -29,20 +29,32 @@
         private void InitializeComponent()
         {
             this.label1 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(230, 183);
+            this.label1.Location = new System.Drawing.Point(138, 41);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(41, 12);
             this.label1.TabIndex = 0;
             this.label1.Text = "label1";
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(79, 413);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 42);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "输出单元验算结果表";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // ChildForm
             // 
             this.ClientSize = new System.Drawing.Size(654, 518);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.label1);
             this.Name = "ChildForm";
             this.Text = "子窗体";
@@ -55,6 +67,7 @@
         #endregion
 
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button button1;
 
 
     }

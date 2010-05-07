@@ -35,8 +35,6 @@ namespace EasyMidas
             }
             else
             {
-                MessageBox.Show("当前窗体数" + MdiChildren.Length.ToString());
-                //to do:
                 if (File.Exists(ModelFile) == false)
                 {
                     ReReadModel(ModelFile);//读取模型文件
@@ -61,7 +59,8 @@ namespace EasyMidas
         /// <param name="MoldeFile">模型文件存储路径</param>
         private void ReReadModel(string ModelFile)
         {
-            MidasGenModel.model.Bmodel midasModel = new MidasGenModel.model.Bmodel();//定义模型对像
+            ChildForm cf = this.ActiveMdiChild as ChildForm;
+
             OpenFileDialog OPD = new OpenFileDialog();
             OPD.Title = "选择Midas数据文件路径";
             OPD.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);//获取我的文档
@@ -69,25 +68,28 @@ namespace EasyMidas
 
             if (OPD.ShowDialog() == DialogResult.OK)
             {
-                midasModel.ReadFromMgt(OPD.FileName);//读取mgt文件
-                MidasGenModel.Application.WriteModelBinary(midasModel, ModelFile);//写出二进制文件
-                MessageLabel.Text="读取模型成功！节点:" + midasModel.nodes.Count.ToString() + "单元:"
-                    + midasModel.elements.Count.ToString();
+                cf.CurModel.ReadFromMgt(OPD.FileName);//读取mgt文件
+                MidasGenModel.Application.WriteModelBinary(cf.CurModel, ModelFile);//写出二进制文件
+                MessageLabel.Text="读取模型成功！节点:" + cf.CurModel.nodes.Count.ToString() + "单元:"
+                    + cf.CurModel.elements.Count.ToString();
+                cf.Refresh();
             }
         }
 
         private void 读取内力ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //OpenFileDialog ofd = new OpenFileDialog();
-            //ofd.Title = "选择Midas单元内力输出文件";
-            //ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Recent);
-            //ofd.Filter = "nl 文件(*.nl)|*.nl|All files (*.*)|*.*";
-            //if (ofd.ShowDialog() == DialogResult.OK)
-            //{
-            //    modelessform.CurModel.ReadElemForces(ofd.FileName);//读取内力
-            //    int num = CurModel.elemforce.Count;//单位内力数
-            //    MessageBox.Show("读入单位内力成功！单位几力数据数：" + num.ToString());
-            //} 
+           ChildForm cf=this.ActiveMdiChild as ChildForm;
+
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Title = "选择Midas单元内力输出文件";
+            ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Recent);
+            ofd.Filter = "nl 文件(*.nl)|*.nl|All files (*.*)|*.*";
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                cf.CurModel.ReadElemForces(ofd.FileName);//读取内力
+                int num =cf.CurModel.elemforce.Count;//单位内力数
+                MessageBox.Show("读入单位内力成功！单位几力数据数：" + num.ToString());
+            } 
         }
 
         private void 新建ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -96,6 +98,32 @@ namespace EasyMidas
             ChildForm.Text = "新模型";
             ChildForm.MdiParent = this;
             ChildForm.Show();
+        }
+
+        private void 钢结构验算ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (this.MdiChildren.Length == 0)
+            {
+                MessageBox.Show("请先新建模型");
+                return;
+            }
+
+            ChildForm cf = this.ActiveMdiChild as ChildForm;
+
+            CheckSteelBeam CSB = new CheckSteelBeam();
+            CSB.Owner =cf;
+            CSB.ShowDialog();
+        }
+
+        private void 测试验算ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (this.MdiChildren.Length == 0)
+            {
+                MessageBox.Show("请先新建模型");
+                return;
+            }
+            ChildForm cf = this.ActiveMdiChild as ChildForm;
+            //to do
         }
     }
 }
