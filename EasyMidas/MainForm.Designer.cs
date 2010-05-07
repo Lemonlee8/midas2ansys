@@ -35,20 +35,17 @@
             this.开始ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tm_ReadMgt = new System.Windows.Forms.ToolStripMenuItem();
             this.前处理ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.后处理ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.帮助ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.读取内力ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.荷载组合编辑ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.后处理ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.钢结构验算ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.帮助ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.前于ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStrip2 = new System.Windows.Forms.ToolStrip();
             this.插件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.新建ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
-            this.toolStripContainer1.LeftToolStripPanel.SuspendLayout();
-            this.toolStripContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // statusStrip
@@ -90,15 +87,16 @@
             // 开始ToolStripMenuItem
             // 
             this.开始ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.新建ToolStripMenuItem,
             this.tm_ReadMgt});
             this.开始ToolStripMenuItem.Name = "开始ToolStripMenuItem";
             this.开始ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
-            this.开始ToolStripMenuItem.Text = "开始";
+            this.开始ToolStripMenuItem.Text = "文件";
             // 
             // tm_ReadMgt
             // 
             this.tm_ReadMgt.Name = "tm_ReadMgt";
-            this.tm_ReadMgt.Size = new System.Drawing.Size(136, 22);
+            this.tm_ReadMgt.Size = new System.Drawing.Size(152, 22);
             this.tm_ReadMgt.Text = "导入Mgt文件";
             this.tm_ReadMgt.Click += new System.EventHandler(this.读取MgtToolStripMenuItem_Click);
             // 
@@ -111,6 +109,19 @@
             this.前处理ToolStripMenuItem.Size = new System.Drawing.Size(53, 20);
             this.前处理ToolStripMenuItem.Text = "前处理";
             // 
+            // 读取内力ToolStripMenuItem
+            // 
+            this.读取内力ToolStripMenuItem.Name = "读取内力ToolStripMenuItem";
+            this.读取内力ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.读取内力ToolStripMenuItem.Text = "读取Midas内力";
+            this.读取内力ToolStripMenuItem.Click += new System.EventHandler(this.读取内力ToolStripMenuItem_Click);
+            // 
+            // 荷载组合编辑ToolStripMenuItem
+            // 
+            this.荷载组合编辑ToolStripMenuItem.Name = "荷载组合编辑ToolStripMenuItem";
+            this.荷载组合编辑ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.荷载组合编辑ToolStripMenuItem.Text = "荷载组合编辑";
+            // 
             // 后处理ToolStripMenuItem
             // 
             this.后处理ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -118,6 +129,12 @@
             this.后处理ToolStripMenuItem.Name = "后处理ToolStripMenuItem";
             this.后处理ToolStripMenuItem.Size = new System.Drawing.Size(53, 20);
             this.后处理ToolStripMenuItem.Text = "后处理";
+            // 
+            // 钢结构验算ToolStripMenuItem
+            // 
+            this.钢结构验算ToolStripMenuItem.Name = "钢结构验算ToolStripMenuItem";
+            this.钢结构验算ToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.钢结构验算ToolStripMenuItem.Text = "钢结构验算";
             // 
             // 帮助ToolStripMenuItem
             // 
@@ -127,6 +144,18 @@
             this.帮助ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
             this.帮助ToolStripMenuItem.Text = "帮助";
             // 
+            // 前于ToolStripMenuItem
+            // 
+            this.前于ToolStripMenuItem.Name = "前于ToolStripMenuItem";
+            this.前于ToolStripMenuItem.Size = new System.Drawing.Size(94, 22);
+            this.前于ToolStripMenuItem.Text = "关于";
+            // 
+            // 插件ToolStripMenuItem
+            // 
+            this.插件ToolStripMenuItem.Name = "插件ToolStripMenuItem";
+            this.插件ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.插件ToolStripMenuItem.Text = "插件";
+            // 
             // toolStrip1
             // 
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
@@ -135,71 +164,22 @@
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // toolStripContainer1
+            // 新建ToolStripMenuItem
             // 
-            // 
-            // toolStripContainer1.ContentPanel
-            // 
-            this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(628, 422);
-            this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            // 
-            // toolStripContainer1.LeftToolStripPanel
-            // 
-            this.toolStripContainer1.LeftToolStripPanel.Controls.Add(this.toolStrip2);
-            this.toolStripContainer1.Location = new System.Drawing.Point(0, 49);
-            this.toolStripContainer1.Name = "toolStripContainer1";
-            this.toolStripContainer1.Size = new System.Drawing.Size(654, 447);
-            this.toolStripContainer1.TabIndex = 3;
-            this.toolStripContainer1.Text = "toolStripContainer1";
-            this.toolStripContainer1.TopToolStripPanelVisible = false;
-            // 
-            // 读取内力ToolStripMenuItem
-            // 
-            this.读取内力ToolStripMenuItem.Name = "读取内力ToolStripMenuItem";
-            this.读取内力ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.读取内力ToolStripMenuItem.Text = "读取Midas内力";
-            // 
-            // 荷载组合编辑ToolStripMenuItem
-            // 
-            this.荷载组合编辑ToolStripMenuItem.Name = "荷载组合编辑ToolStripMenuItem";
-            this.荷载组合编辑ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.荷载组合编辑ToolStripMenuItem.Text = "荷载组合编辑";
-            // 
-            // 钢结构验算ToolStripMenuItem
-            // 
-            this.钢结构验算ToolStripMenuItem.Name = "钢结构验算ToolStripMenuItem";
-            this.钢结构验算ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.钢结构验算ToolStripMenuItem.Text = "钢结构验算";
-            // 
-            // 前于ToolStripMenuItem
-            // 
-            this.前于ToolStripMenuItem.Name = "前于ToolStripMenuItem";
-            this.前于ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.前于ToolStripMenuItem.Text = "关于";
-            // 
-            // toolStrip2
-            // 
-            this.toolStrip2.Dock = System.Windows.Forms.DockStyle.None;
-            this.toolStrip2.Location = new System.Drawing.Point(0, 3);
-            this.toolStrip2.Name = "toolStrip2";
-            this.toolStrip2.Size = new System.Drawing.Size(26, 111);
-            this.toolStrip2.TabIndex = 0;
-            // 
-            // 插件ToolStripMenuItem
-            // 
-            this.插件ToolStripMenuItem.Name = "插件ToolStripMenuItem";
-            this.插件ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
-            this.插件ToolStripMenuItem.Text = "插件";
+            this.新建ToolStripMenuItem.Name = "新建ToolStripMenuItem";
+            this.新建ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.新建ToolStripMenuItem.Text = "新建模型";
+            this.新建ToolStripMenuItem.Click += new System.EventHandler(this.新建ToolStripMenuItem_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(654, 518);
-            this.Controls.Add(this.toolStripContainer1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip1);
+            this.IsMdiContainer = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "EasyMidas";
@@ -207,10 +187,6 @@
             this.statusStrip.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.toolStripContainer1.LeftToolStripPanel.ResumeLayout(false);
-            this.toolStripContainer1.LeftToolStripPanel.PerformLayout();
-            this.toolStripContainer1.ResumeLayout(false);
-            this.toolStripContainer1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -221,7 +197,6 @@
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripContainer toolStripContainer1;
         private System.Windows.Forms.ToolStripMenuItem 开始ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 前处理ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 后处理ToolStripMenuItem;
@@ -233,8 +208,8 @@
         private System.Windows.Forms.ToolStripMenuItem 荷载组合编辑ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 钢结构验算ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 前于ToolStripMenuItem;
-        private System.Windows.Forms.ToolStrip toolStrip2;
         private System.Windows.Forms.ToolStripMenuItem 插件ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 新建ToolStripMenuItem;
     }
 }
 

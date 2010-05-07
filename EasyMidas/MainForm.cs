@@ -28,19 +28,31 @@ namespace EasyMidas
                 Directory.CreateDirectory(CurModelPath);//创建目录
             }
 
-            if (File.Exists(ModelFile) == false)
+            if (this.MdiChildren.Length == 0)
             {
-                ReReadModel(ModelFile);//读取模型文件
+                MessageBox.Show("请先新建模型");
+                return;
             }
             else
             {
-                DialogResult res = MessageBox.Show("程序发现已有分析模型数据，是否重新读入mgt分析模型数据？", "注意",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2);
-                if (res == DialogResult.Yes)
+                MessageBox.Show("当前窗体数" + MdiChildren.Length.ToString());
+                //to do:
+                if (File.Exists(ModelFile) == false)
                 {
-                    ReReadModel(ModelFile);
+                    ReReadModel(ModelFile);//读取模型文件
+                }
+                else
+                {
+                    DialogResult res = MessageBox.Show("程序发现已有分析模型数据，是否重新读入mgt分析模型数据？", "注意",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2);
+                    if (res == DialogResult.Yes)
+                    {
+                        ReReadModel(ModelFile);
+                    }
                 }
             }
+
+            
         }
 
         /// <summary>
@@ -62,6 +74,28 @@ namespace EasyMidas
                 MessageLabel.Text="读取模型成功！节点:" + midasModel.nodes.Count.ToString() + "单元:"
                     + midasModel.elements.Count.ToString();
             }
+        }
+
+        private void 读取内力ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //OpenFileDialog ofd = new OpenFileDialog();
+            //ofd.Title = "选择Midas单元内力输出文件";
+            //ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Recent);
+            //ofd.Filter = "nl 文件(*.nl)|*.nl|All files (*.*)|*.*";
+            //if (ofd.ShowDialog() == DialogResult.OK)
+            //{
+            //    modelessform.CurModel.ReadElemForces(ofd.FileName);//读取内力
+            //    int num = CurModel.elemforce.Count;//单位内力数
+            //    MessageBox.Show("读入单位内力成功！单位几力数据数：" + num.ToString());
+            //} 
+        }
+
+        private void 新建ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ChildForm ChildForm = new ChildForm();
+            ChildForm.Text = "新模型";
+            ChildForm.MdiParent = this;
+            ChildForm.Show();
         }
     }
 }
