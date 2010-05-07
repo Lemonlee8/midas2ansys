@@ -4,6 +4,7 @@ using System.Collections;
 using System.Text;
 using System.IO;
 using System.Windows.Forms;
+using MidasGenModel.Design;
 
 
 namespace MidasGenModel.model
@@ -1274,12 +1275,19 @@ namespace MidasGenModel.model
     [Serializable]
     public class FrameElement : Element
     {
-        /// <summary>
-        /// 单元方向角（度）
-        /// </summary>
         private double Angle;
         private int _iSUB;
         private double _EXVAL;
+        private DesignParameters _DPs;
+
+        /// <summary>
+        /// 钢结构梁单元的设计参数
+        /// </summary>
+        public DesignParameters DPs
+        {
+            get { return _DPs; }
+            set { _DPs = value; }
+        }
 
         /// <summary>
         /// 梁单元方向角（beta角）
@@ -1325,6 +1333,7 @@ namespace MidasGenModel.model
         {
             this.TYPE = ElemType.BEAM;
             this.beta = 0;
+            this._DPs = new DesignParameters();
         }
         /// <summary>
         /// 带参数的构造函数
@@ -1338,6 +1347,7 @@ namespace MidasGenModel.model
             : base(num, type, mat, pro, iNodes)
         {
             //调用基类的构造函数
+            this._DPs = new DesignParameters();
         }
     }
 
@@ -1428,20 +1438,75 @@ namespace MidasGenModel.model
         /// </summary>
         public ArrayList SEC_Data;
 
-        /// <summary>
-        /// 存储截面特性值
-        /// </summary>
+
+        #region 存储截面特性值
         protected double _Area;//面积
         protected double _ASy;//单元坐标系y轴方向的有效剪切面积
         protected double _ASz;//单元坐标系z轴方向的有效剪切面积
-        protected double _Ixx;//截面扭转贯性矩
-        protected double _Iyy;//单元绕y轴的截面贯性矩
-        protected double _Izz;//单元绕z轴的截面贯性矩
+        private double _Ixx;//截面扭转贯性矩
+        /// <summary>
+        /// 截面扭转贯性矩
+        /// </summary>
+        public double Ixx
+        {
+            get { return _Ixx; }
+            set { _Ixx = value; }
+        }
+        private double _Iyy;//单元绕y轴的截面贯性矩
+        /// <summary>
+        /// 单元绕y轴的截面贯性矩
+        /// </summary>
+        public  double Iyy
+        {
+            get { return _Iyy; }
+            set { _Iyy = value; }
+        }
+        private double _Izz;//单元绕z轴的截面贯性矩
+        /// <summary>
+        /// 单元绕z轴的截面贯性矩
+        /// </summary>
+        public double Izz
+        {
+            get { return _Izz; }
+            set { _Izz = value; }
+        }
 
-        protected double _CyP;//自中和轴到单元坐标系(+)y方向最外端的距离
-        protected double _CyM;//自中和轴到单元坐标系(-)y方向最外端的距离
-        protected double _CzP;//自中和轴到单元坐标系(+)z方向最外端的距离
-        protected double _CzM;//自中和轴到单元坐标系(-)z方向最外端的距离
+        private double _CyP;//自中和轴到单元坐标系(+)y方向最外端的距离
+        /// <summary>
+        /// 自中和轴到单元坐标系(+)y方向最外端的距离
+        /// </summary>
+        public double CyP
+        {
+            get { return _CyP; }
+            set { _CyP = value; }
+        }
+        private double _CyM;//自中和轴到单元坐标系(-)y方向最外端的距离
+        /// <summary>
+        /// 自中和轴到单元坐标系(-)y方向最外端的距离
+        /// </summary>
+        public double CyM
+        {
+            get { return _CyM; }
+            set { _CyM = value; }
+        }
+        private double _CzP;//自中和轴到单元坐标系(+)z方向最外端的距离
+        /// <summary>
+        /// 自中和轴到单元坐标系(+)z方向最外端的距离
+        /// </summary>
+        public double CzP
+        {
+            get { return _CzP; }
+            set { _CzP = value; }
+        }
+        private double _CzM;//自中和轴到单元坐标系(-)z方向最外端的距离
+        /// <summary>
+        /// 自中和轴到单元坐标系(-)z方向最外端的距离
+        /// </summary>
+        public double CzM
+        {
+            get { return _CzM; }
+            set { _CzM = value; }
+        }
         protected double _QyB;//作用于单元坐标系y轴方向的剪切系数
         protected double _QzB;//作用于单元坐标系z轴方向的剪切系数
         protected double _PERI_OUT;//截面外轮廓周长
@@ -1457,7 +1522,7 @@ namespace MidasGenModel.model
         protected double _z3;//四个角点坐标
         protected double _y4;//四个角点坐标
         protected double _z4;//四个角点坐标
-        //属性
+        #endregion
         /// <summary>
         /// 截面名称属性
         /// </summary>

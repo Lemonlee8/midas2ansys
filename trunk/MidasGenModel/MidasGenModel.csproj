@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.50727</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{733A5DA0-4D5D-43D7-9614-DE6F7EF5E09B}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClassLib.cs" />
+    <Compile Include="CodeCheck.cs" />
     <Compile Include="model.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
