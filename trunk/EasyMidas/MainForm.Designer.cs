@@ -30,7 +30,8 @@
         {
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.MessageLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.ModelInfoLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.开始ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.新建ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -40,11 +41,14 @@
             this.荷载组合编辑ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.后处理ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.钢结构验算ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.测试验算ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.帮助ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.前于ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.插件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.全部关闭ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.测试验算ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.UnitLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -53,23 +57,35 @@
             // 
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.MessageLabel,
-            this.toolStripProgressBar1});
+            this.toolStripStatusLabel1,
+            this.ModelInfoLabel,
+            this.toolStripStatusLabel2,
+            this.UnitLabel});
             this.statusStrip.Location = new System.Drawing.Point(0, 496);
             this.statusStrip.Name = "statusStrip";
+            this.statusStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
             this.statusStrip.Size = new System.Drawing.Size(654, 22);
             this.statusStrip.TabIndex = 0;
             this.statusStrip.Text = "statusStrip1";
+            this.statusStrip.Paint += new System.Windows.Forms.PaintEventHandler(this.statusStrip_Paint);
             // 
             // MessageLabel
             // 
             this.MessageLabel.Name = "MessageLabel";
-            this.MessageLabel.Size = new System.Drawing.Size(41, 17);
-            this.MessageLabel.Text = "无模型";
+            this.MessageLabel.Size = new System.Drawing.Size(29, 17);
+            this.MessageLabel.Text = "就绪";
             // 
-            // toolStripProgressBar1
+            // toolStripStatusLabel1
             // 
-            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
-            this.toolStripProgressBar1.Size = new System.Drawing.Size(100, 16);
+            this.toolStripStatusLabel1.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)));
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(4, 17);
+            // 
+            // ModelInfoLabel
+            // 
+            this.ModelInfoLabel.Name = "ModelInfoLabel";
+            this.ModelInfoLabel.Size = new System.Drawing.Size(17, 17);
+            this.ModelInfoLabel.Text = "无";
             // 
             // menuStrip1
             // 
@@ -80,6 +96,7 @@
             this.帮助ToolStripMenuItem,
             this.插件ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.MdiWindowListItem = this.插件ToolStripMenuItem;
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(654, 24);
             this.menuStrip1.TabIndex = 1;
@@ -142,9 +159,16 @@
             // 钢结构验算ToolStripMenuItem
             // 
             this.钢结构验算ToolStripMenuItem.Name = "钢结构验算ToolStripMenuItem";
-            this.钢结构验算ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.钢结构验算ToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
             this.钢结构验算ToolStripMenuItem.Text = "钢结构验算";
             this.钢结构验算ToolStripMenuItem.Click += new System.EventHandler(this.钢结构验算ToolStripMenuItem_Click);
+            // 
+            // 测试验算ToolStripMenuItem
+            // 
+            this.测试验算ToolStripMenuItem.Name = "测试验算ToolStripMenuItem";
+            this.测试验算ToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.测试验算ToolStripMenuItem.Text = "测试验算";
+            this.测试验算ToolStripMenuItem.Click += new System.EventHandler(this.测试验算ToolStripMenuItem_Click);
             // 
             // 帮助ToolStripMenuItem
             // 
@@ -162,9 +186,17 @@
             // 
             // 插件ToolStripMenuItem
             // 
+            this.插件ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.全部关闭ToolStripMenuItem});
             this.插件ToolStripMenuItem.Name = "插件ToolStripMenuItem";
             this.插件ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
-            this.插件ToolStripMenuItem.Text = "插件";
+            this.插件ToolStripMenuItem.Text = "窗口";
+            // 
+            // 全部关闭ToolStripMenuItem
+            // 
+            this.全部关闭ToolStripMenuItem.Name = "全部关闭ToolStripMenuItem";
+            this.全部关闭ToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
+            this.全部关闭ToolStripMenuItem.Text = "全部关闭";
             // 
             // toolStrip1
             // 
@@ -174,12 +206,17 @@
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // 测试验算ToolStripMenuItem
+            // toolStripStatusLabel2
             // 
-            this.测试验算ToolStripMenuItem.Name = "测试验算ToolStripMenuItem";
-            this.测试验算ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.测试验算ToolStripMenuItem.Text = "测试验算";
-            this.测试验算ToolStripMenuItem.Click += new System.EventHandler(this.测试验算ToolStripMenuItem_Click);
+            this.toolStripStatusLabel2.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)));
+            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
+            this.toolStripStatusLabel2.Size = new System.Drawing.Size(4, 17);
+            // 
+            // UnitLabel
+            // 
+            this.UnitLabel.Name = "UnitLabel";
+            this.UnitLabel.Size = new System.Drawing.Size(47, 17);
+            this.UnitLabel.Text = "单位:无";
             // 
             // MainForm
             // 
@@ -193,6 +230,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "EasyMidas";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
@@ -213,7 +251,6 @@
         private System.Windows.Forms.ToolStripMenuItem 帮助ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem tm_ReadMgt;
         private System.Windows.Forms.ToolStripStatusLabel MessageLabel;
-        private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.Windows.Forms.ToolStripMenuItem 读取内力ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 荷载组合编辑ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 钢结构验算ToolStripMenuItem;
@@ -221,6 +258,11 @@
         private System.Windows.Forms.ToolStripMenuItem 插件ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 新建ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 测试验算ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 全部关闭ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.ToolStripStatusLabel ModelInfoLabel;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
+        private System.Windows.Forms.ToolStripStatusLabel UnitLabel;
     }
 }
 
