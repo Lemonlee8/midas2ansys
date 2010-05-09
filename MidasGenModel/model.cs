@@ -3034,6 +3034,30 @@ namespace MidasGenModel.model
             }
             return res;
         }
+
+        /// <summary>
+        /// 清理所有模型数据
+        /// </summary>
+        public void Reset()
+        {
+            unit = new BUNIT();
+
+            nodes = new SortedList<int, Bnodes>();
+            elements = new SortedList<int, Element>();
+            sections = new SortedList<int, BSections>();
+            thickness = new SortedList<int, BThickness>();
+
+            constraint = new List<BConstraint>();
+
+            STLDCASE = new List<BLoadCase>();
+            _LoadCombTable = new BLoadCombTable();//荷载组合表
+            conloads = new SortedList<int, BNLoad>(new RepeatedKeySort());//节点荷载
+            beamloads = new SortedList<int, BBLoad>(new RepeatedKeySort());//梁单元荷载
+            selfweight = new SortedList<string, BWeight>();//自重信息
+            mats = new SortedList<int, BMaterial>();//材料信息
+
+            elemforce = new SortedList<int, BElemForceTable>();//单元内力表
+        }
         #endregion
         #region model类输入输出接口方法
         /// <summary>
