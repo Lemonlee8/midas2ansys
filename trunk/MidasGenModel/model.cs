@@ -1172,6 +1172,19 @@ namespace MidasGenModel.model
         {
             return ("(" + num.ToString() + "," + X.ToString() + "," + Y.ToString() + "," + Z.ToString() + ")");
         }
+
+        /// <summary>
+        /// 求两节点间的矩离
+        /// </summary>
+        /// <param name="nodeNext">下一个节点</param>
+        /// <returns>返回距离值</returns>
+        public double DistanceTo(Bnodes nodeNext)
+        {
+            double res=Math.Sqrt(Math.Pow((nodeNext.X-this.X),2)+
+                Math.Pow((nodeNext.Y-this.Y),2)+
+                Math.Pow((nodeNext.Z-this.Z),2));
+            return res;
+        }
     }
 
     /// <summary>
@@ -1349,6 +1362,9 @@ namespace MidasGenModel.model
             //调用基类的构造函数
             this._DPs = new DesignParameters();
         }
+
+        #region 单元方法
+        #endregion
     }
 
     /// <summary>
@@ -1514,14 +1530,62 @@ namespace MidasGenModel.model
         protected double _Cy;//截面形心y坐标
         protected double _Cz;//截面形心z坐标
 
-        protected double _y1;//四个角点坐标
-        protected double _z1;//四个角点坐标
-        protected double _y2;//四个角点坐标
-        protected double _z2;//四个角点坐标
-        protected double _y3;//四个角点坐标
-        protected double _z3;//四个角点坐标
-        protected double _y4;//四个角点坐标
-        protected double _z4;//四个角点坐标
+        private double _y1;//四个角点坐标
+        //四个角点坐标
+        protected double Y1
+        {
+            get { return _y1; }
+            set { _y1 = value; }
+        }
+        private double _z1;//四个角点坐标
+        //四个角点坐标
+        protected double Z1
+        {
+            get { return _z1; }
+            set { _z1 = value; }
+        }
+        private double _y2;//四个角点坐标
+        //四个角点坐标
+        protected double Y2
+        {
+            get { return _y2; }
+            set { _y2 = value; }
+        }
+        private double _z2;//四个角点坐标
+        //四个角点坐标
+        protected double Z2
+        {
+            get { return _z2; }
+            set { _z2 = value; }
+        }
+        private double _y3;//四个角点坐标
+        //四个角点坐标
+        protected double Y3
+        {
+            get { return _y3; }
+            set { _y3 = value; }
+        }
+        private double _z3;//四个角点坐标
+        //四个角点坐标
+        protected double Z3
+        {
+            get { return _z3; }
+            set { _z3 = value; }
+        }
+        private double _y4;//四个角点坐标
+        //四个角点坐标
+        protected double Y4
+        {
+            get { return _y4; }
+            set { _y4 = value; }
+        }
+        private double _z4;//四个角点坐标
+        //四个角点坐标
+        protected double Z4
+        {
+            get { return _z4; }
+            set { _z4 = value; }
+        }
         #endregion
         /// <summary>
         /// 截面名称属性
@@ -2211,6 +2275,7 @@ namespace MidasGenModel.model
         private double _Poisn;//泊松比
         private double _Thermal;//线膨胀系数
         private double _Den;//单位体积重量
+        private double _Fy;//材料屈服强度
 
         /// <summary>
         /// 原始mgt数据信息
@@ -2269,6 +2334,13 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
+        /// 材料屈服强度
+        /// </summary>
+        public double Fy
+        {
+            get { return _Fy; }
+        }
+        /// <summary>
         /// 构造函数:默认是钢的数据
         /// </summary>
         public BMaterial()
@@ -2280,6 +2352,7 @@ namespace MidasGenModel.model
             _Poisn = 0.3;
             _Thermal = 1.2e-5;
             _Den = 7850;
+            _Fy = 235e6;
         }
         /// <summary>
         /// 构造函数
@@ -2296,6 +2369,7 @@ namespace MidasGenModel.model
             _Poisn = 0;
             _Thermal = 0;
             _Den = 0;
+            _Fy = 0;
             MGT_Data = new ArrayList();
         }
 
@@ -2349,6 +2423,33 @@ namespace MidasGenModel.model
             foreach (string dt in temp)
             {
                 MGT_Data.Add(dt.Trim());
+            }
+        }
+        /// <summary>
+        /// 标准化材料特性值
+        /// </summary>
+        public void NormalizeProp()
+        {
+            string s1=this.MGT_Data[MGT_Data.Count-2] as string;
+            string s2=this.MGT_Data[MGT_Data.Count-1] as string;
+            if (this._TYPE == MatType.STEEL &&( s1 == "GB03(S)"))
+            {
+                if (s2 == "Q345")
+                {
+                    _Fy = 345e6;
+                }
+                else if (s2 == "Q235")
+                {
+                    _Fy = 235e6;
+                }
+                else if (s2 == "Q390")
+                {
+                    _Fy = 390e6;
+                }
+                else if (s2 == "Q420")
+                {
+                    _Fy = 420e6;
+                }
             }
         }
     }
@@ -2990,6 +3091,12 @@ namespace MidasGenModel.model
                 sec.CalculateSecProp();//计算截面特性
                 //todo:当输入截面为数据库截面时，进行截面参数转化
             }
+
+            //标准化材料特性
+            foreach (BMaterial mat in mats.Values)
+            {
+                mat.NormalizeProp();
+            }
         }
 
         /// <summary>
@@ -3057,6 +3164,23 @@ namespace MidasGenModel.model
             mats = new SortedList<int, BMaterial>();//材料信息
 
             elemforce = new SortedList<int, BElemForceTable>();//单元内力表
+        }
+
+        /// <summary>
+        /// 取得线单元的长度
+        /// </summary>
+        /// <param name="iEle">线单元号</param>
+        /// <returns></returns>
+        public double getFrameLength(int iEle)
+        {
+            double res = 0;
+
+            if (this.elements[iEle] is FrameElement)
+            {
+                FrameElement ele=this.elements[iEle] as FrameElement;
+                res = this.nodes[ele.iNs[0]].DistanceTo(this.nodes[ele.iNs[1]]);
+            }
+            return res;
         }
         #endregion
         #region model类输入输出接口方法
@@ -3289,7 +3413,7 @@ namespace MidasGenModel.model
                                 BSections secdata = new SectionDBuser();
                                 secdata.Num = tempInt;
                                 secdata.TYPE = tt;//截面类型(枚举解析)                        
-                                secdata.Name = temp[2];//截面名称
+                                secdata.Name = temp[2].Trim();//截面名称
 
                                 secdata.OFFSET[0] = temp[3];//截面偏心
                                 for (int i = 1; i < 7; i++)
@@ -3319,7 +3443,7 @@ namespace MidasGenModel.model
                                 SectionTapered secTapered=new SectionTapered ();
                                 secTapered.Num = tempInt;
                                 secTapered.TYPE = tt;//截面类型(枚举解析)                        
-                                secTapered.Name = temp[2];//截面名称
+                                secTapered.Name = temp[2].Trim();//截面名称
                                 secTapered.OFFSET.Clear();
                                 secTapered.OFFSET.Add(temp[3].Trim());//截面偏心
                                 for (int i = 1; i < 9; i++)

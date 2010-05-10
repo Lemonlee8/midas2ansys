@@ -156,6 +156,122 @@ namespace MidasGenModel.Design
             writer.Close();
             stream.Close();
         }
+
+        /// <summary>
+        /// 对某单元按指定的计算长度计算长细比
+        /// </summary>
+        /// <param name="mm">模型对像</param>
+        /// <param name="iElem">单元号，必须为梁单元FrameElement</param>
+        /// <param name="l_0y">平面内计算长度</param>
+        /// <param name="l_0z">平面外计算长度</param>
+        public static void CalDesignPara_lemda(ref Bmodel mm, int iElem, double l_0y, double l_0z)
+        {
+            FrameElement ele = mm.elements[iElem] as FrameElement;
+            int iSec =ele.iPRO;//截面号
+            double i_y = Math.Sqrt(mm.sections[iSec].Iyy / mm.sections[iSec].Area);//回转半径
+            double i_z = Math.Sqrt(mm.sections[iSec].Izz / mm.sections[iSec].Area);
+
+            ele.DPs.Lemda_y = l_0y / i_y;//计算长细比
+            ele.DPs.Lemda_z = l_0z / i_z;//计算长细比
+
+            double eleLeng = mm.getFrameLength(iElem);//单元长度
+            ele.DPs.Lk_y = l_0y/eleLeng;//计算长度系数（单元长度的倍数）
+            ele.DPs.Lk_z = l_0z/eleLeng;
+        }
+
+        /// <summary>
+        /// 计算受压构件的稳定系数phi
+        /// GB50017 附表C公式
+        /// </summary>
+        /// <param name="mm">模型对像</param>
+        /// <param name="iElem">单元号</param>
+        /// <param name="iYZ">指示计算当前截面哪个方向的稳定系数 1：phi_y;2:phi_z</param>
+        /// <param name="Cat">截面类别</param>
+        public static void CalDesignPara_phi(ref Bmodel mm, int iElem,int iYZ,SecCategory Cat)
+        {
+            FrameElement ele = mm.elements[iElem] as FrameElement;
+            int iSec = ele.iPRO;//截面号
+            double E = mm.mats[ele.iMAT].Elast;//弹性模量
+            double Fy = mm.mats[ele.iMAT].Fy;//屈服强度
+
+            double lemda=0;
+            double a1=0;
+            double a2=0;
+            double a3=0;
+            double phi=1;//稳定系数
+            if (iYZ==1)
+            {
+                lemda =ele.DPs.Lemda_y;
+            }
+            else if (iYZ ==2)
+            {
+                lemda = ele.DPs.Lemda_z;
+            }
+
+            double lemda_n = lemda * Math.Sqrt(Fy / E) / Math.PI;//正则长细比
+            TableC_5(Cat,lemda_n,out a1,out a2,out a3);//查表C-5
+
+            if (lemda_n <= 0.215)
+            {
+               phi=1-a1*Math.Pow(lemda_n,2);
+            }
+            else 
+            {
+                double temp1=a2+a3*lemda_n+Math.Pow(lemda_n,2);
+                double temp2=Math.Pow(lemda_n,2);
+                phi=(temp1-Math.Sqrt(Math.Pow(temp1,2)-4*temp2))/(2*temp2);
+            }
+
+            //存储
+            if (iYZ == 1)
+            {
+                ele.DPs.Phi_y = phi;
+            }
+            else if (iYZ ==2)
+            {
+                ele.DPs.Phi_z = phi;
+            }
+        }
+
+        /// <summary>
+        /// 查附录表C-5中的三个系数
+        /// </summary>
+        /// <param name="Cat">截面类别</param>
+        /// <param name="lemda_n">正则长细比</param>
+        /// <param name="alph1">参数</param>
+        /// <param name="alph2">参数</param>
+        /// <param name="alph3">参数</param>
+        public static void TableC_5(SecCategory Cat,double lemda_n,out double alph1,out double alph2,
+            out double alph3)
+        {
+            switch (Cat)
+            {
+                case SecCategory.a:
+                    alph1 = 0.41; alph2 = 0.986; alph3 = 0.152; break;
+                case SecCategory .b:
+                    alph1 = 0.65; alph2 = 0.965; alph3 = 0.3; break;
+                case SecCategory .c:
+                    if (lemda_n <= 1.05)
+                    {
+                        alph1 = 0.73; alph2 = 0.906; alph3 = 0.595; break;
+                    }
+                    else
+                    {
+                        alph1 = 0.73; alph2 = 1.216; alph3 = 0.302; break;
+                    }
+                case SecCategory .d:
+                    if (lemda_n <= 1.05)
+                    {
+                        alph1 =1.35; alph2 = 0.868; alph3 = 0.915; break;
+                    }
+                    else
+                    {
+                        alph1 = 1.35; alph2 = 1.375; alph3 = 0.432; break;
+                    }
+                default:
+                    alph1 = 0.65; alph2 = 0.965; alph3 = 0.3; break;
+            }
+        }
     }
     /// <summary>
     /// 钢结构主要设计参数类
@@ -170,7 +286,8 @@ namespace MidasGenModel.Design
         private double _Phi_by,_Phi_bz;//受弯构件整体稳定性系数
         private double _Phi_y, _Phi_z;//受压构件稳定系数
         private double _lemda_y, _lemda_z;//长细比
-        private double _lk_y, _lk_z;//计算长度系数
+        private double _lemda_yz;//换算长细比 GB50017-2003 式(5.1.2-3)
+        private double _lk_y, _lk_z;//计算长度(有单位)
         private double _Yita;//截面影响系数GB50017-2003 P48 ：闭口截面取0.7,其它截面取1.0
 
         private double _fy;//抗拉，抗压强度设计值
@@ -267,7 +384,7 @@ namespace MidasGenModel.Design
             set { _Phi_z = value; }
         }
         /// <summary>
-        /// 计算长度系数
+        /// 长细比
         /// </summary>
         public double Lemda_y
         {
@@ -275,12 +392,20 @@ namespace MidasGenModel.Design
             set { _lemda_y = value; }
         }
         /// <summary>
-        /// 计算长度系数
+        /// 长细比
         /// </summary>
         public double Lemda_z
         {
             get { return _lemda_z; }
             set { _lemda_z = value; }
+        }
+        /// <summary>
+        /// 换算长细比 GB50017-2003 式(5.1.2-3)
+        /// </summary>
+        public double Lemda_yz
+        {
+            get { return _lemda_yz; }
+            set { _lemda_yz = value; }
         }
         /// <summary>
         /// 计算长度系数
@@ -335,9 +460,23 @@ namespace MidasGenModel.Design
             _Phi_z = 1;
             _lemda_y = 50;
             _lemda_z = 50;
+            _lemda_yz = 50;
+            _lk_y = 1;
+            _lk_z = 1;
 
             _fy = 295;
             _Yita = 1.0;
         }
+
+        #region 方法
+        #endregion
+    }
+
+    /// <summary>
+    /// 截面类别
+    /// </summary>
+    public enum SecCategory
+    {
+        a,b,c,d
     }
 }
