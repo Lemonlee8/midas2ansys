@@ -74,6 +74,7 @@ namespace EasyMidas
                 ModelForm.Text = Path.GetFileName(ModelFile);
                 ModelForm.Refresh();
                 this.Refresh();
+                ModelForm.InitContral();//更新控件
             }
         }
 
