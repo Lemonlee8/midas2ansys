@@ -3182,6 +3182,24 @@ namespace MidasGenModel.model
             }
             return res;
         }
+
+        /// <summary>
+        /// 由截面号返回单元号列表
+        /// </summary>
+        /// <param name="iSec">截面号</param>
+        /// <returns>单元号列表</returns>
+        public List<int> getElemBySec(int iSec)
+        {
+            List<int> Res = new List<int>();
+            foreach (Element ele in this.elements.Values)
+            {
+                if (ele.iPRO == iSec)
+                {
+                    Res.Add(ele.iEL);
+                }
+            }
+            return Res;
+        }
         #endregion
         #region model类输入输出接口方法
         /// <summary>

@@ -12,11 +12,13 @@ namespace EasyMidas
 {
     public partial class ChildForm : Form
     {
-        public  Bmodel CurModel;
+        public  Bmodel CurModel;//模型数据
+        public CheckRes CheckTable;//截面验算结果表
         public ChildForm()
         {
             InitializeComponent();
             CurModel = new Bmodel();
+            CheckTable = new CheckRes();
             InitContral();//初始化控件
             comboBox1.SelectedIndex = 1;
         }
@@ -38,7 +40,7 @@ namespace EasyMidas
             {
                 int num = Convert.ToInt32(textBox12.Text);
                 UpdataDesignPara(num);//更新单元设计参数
-                CodeCheck.WriteElemCheckRes(ref CurModel, sfd.FileName,num );
+                CodeCheck.WriteElemCheckRes(ref CurModel, ref CheckTable,sfd.FileName,num );
             }
         }
         //初始化控件
@@ -49,7 +51,7 @@ namespace EasyMidas
             {
                 foreach (BSections sec in CurModel.sections.Values)
                 {
-                    cb_secs.Items.Add(sec.Name);
+                    cb_secs.Items.Add(sec.Num+" "+sec.Name);
                 }
             }
             else
@@ -81,6 +83,7 @@ namespace EasyMidas
             double Betal_tz = Convert.ToDouble(tb_betla4.Text);
             double Phi_by = Convert.ToDouble(tb_phibx.Text);
             double Phi_bz = Convert.ToDouble(tb_phiby.Text);
+            double F = Convert.ToDouble(tb_f.Text);//强度设计值
             SecCategory cat=SecCategory.b;
 
             switch(comboBox1.SelectedIndex)
@@ -105,17 +108,56 @@ namespace EasyMidas
             fele.DPs.Belta_mz = Betal_mz;
             fele.DPs.Belta_ty = Betal_ty;
             fele.DPs.Belta_tz = Betal_tz;
+            fele.DPs.fy = F;//强度设计值
         }
         private void button2_Click(object sender, EventArgs e)
         {
-            CodeCheck.CalDesignPara_lemda(ref CurModel, 4, 28.02, 35.05);
-            CodeCheck.CalDesignPara_phi(ref CurModel, 4, 1, SecCategory.c);
-            CodeCheck.CalDesignPara_phi(ref CurModel, 4, 2, SecCategory.c);
+            string Cursec = cb_secs.SelectedItem.ToString();
+            int iSec = 5;
+            if (Cursec.Contains(" "))
+            {
+                string temp = Cursec.Remove(Cursec.IndexOf(' '));
+                iSec = Convert.ToInt32(temp);//取得截面号
+            }
+            List<int> eles = CurModel.getElemBySec(iSec);
+            foreach (int ele in eles)
+            {
+                UpdataDesignPara(ele);//更新单元设计参数
+            }
+            CheckTable.CheckElemBySec(ref CurModel, iSec);
+            return;
         }
 
-        private void textBox4_TextChanged(object sender, EventArgs e)
+        private void button3_Click(object sender, EventArgs e)
         {
+            string Cursec = cb_secs.SelectedItem.ToString();
+            int iSec = 5;
+            if (Cursec.Contains(" "))
+            {
+                string temp = Cursec.Remove(Cursec.IndexOf(' '));
+                iSec = Convert.ToInt32(temp);//取得截面号
+            }
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Title = "请输入结果文件存储位置";
+            sfd.Filter = "txt 文件(*.txt)|*.txt|All files (*.*)|*.*";
 
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+               CodeCheck.WriteSecCheckRes(ref CurModel,ref CheckTable,sfd.FileName,iSec);
+            }
+        }
+
+        //输出所有截面验算结果
+        private void button4_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Title = "请输入结果文件存储位置";
+            sfd.Filter = "txt 文件(*.txt)|*.txt|All files (*.*)|*.*";
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                CodeCheck.WriteAllCheckRes(ref CurModel,ref CheckTable,sfd.FileName);
+            }
         }
 
     }

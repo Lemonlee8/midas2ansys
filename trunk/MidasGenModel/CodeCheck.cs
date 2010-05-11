@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MidasGenModel.model;
 using System.IO;
+using System.Collections;
 
 namespace MidasGenModel.Design
 {
@@ -92,8 +93,9 @@ namespace MidasGenModel.Design
         /// </summary>
         /// <param name="mm">模型对像</param>
         /// <param name="FileOut">输出文件路径</param>
+        /// <param name="cr">截面验算结果</param>
         /// <param name="iElem">单元号</param>
-        public static void WriteElemCheckRes(ref Bmodel mm, string FileOut, int iElem)
+        public static void WriteElemCheckRes(ref Bmodel mm,ref CheckRes cr, string FileOut, int iElem)
         {
             FileStream stream = File.Open(FileOut, FileMode.Create);
             StreamWriter writer = new StreamWriter(stream);
@@ -102,55 +104,81 @@ namespace MidasGenModel.Design
             List<string> coms = mm.LoadCombTable.ComSteel;
             foreach (string com in coms)
             {
-                FrameElement ele =mm.elements[iElem] as FrameElement;
-                //先进行单元内力组合
-                ElemForce EFcom = mm.CalElemForceComb(mm.LoadCombTable[com], iElem);
-           
-                //计算强度
-                double Strength_i=CalStrength_YW(EFcom.Force_i,
-                    mm.sections[ele.iPRO],
-                    ele.DPs);//i截面计算强度
-                double Strength_2 = CalStrength_YW(EFcom.Force_48,
-                    mm.sections[ele.iPRO],
-                    ele.DPs);
-                double Strength_j = CalStrength_YW(EFcom.Force_j,
-                    mm.sections[ele.iPRO],
-                    ele.DPs);
-                //计算稳定性强度
-                double Stability_i = CalStability_YW(EFcom.Force_i, mm.sections[ele.iPRO],
-                    ele.DPs, mm.mats[ele.iMAT].Elast);
-                double Stability_2 = CalStability_YW(EFcom.Force_48, mm.sections[ele.iPRO],
-                    ele.DPs, mm.mats[ele.iMAT].Elast);
-                double Stability_j = CalStability_YW(EFcom.Force_j, mm.sections[ele.iPRO],
-                    ele.DPs, mm.mats[ele.iMAT].Elast);
+                SingleEleCheckResData serd = cr.CheckResTable[iElem].GetCheckResByCom(com);
+                writer.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}", iElem.ToString(), serd.Sec_contral, com,
+                    (serd.N / 1e3).ToString("0.0"), (serd.My/1e3).ToString("0.0"),
+                    (serd.Mz/1e3).ToString("0.0"), (serd.Strength/1e6).ToString("0.0"),
+                    (serd.Stability/1e6).ToString("0.0"),serd.Ratio.ToString("0.00"));
+                //writer.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}", iElem.ToString(), "1/2", com,
+                //    EFcom.Force_48.N.ToString("0.0"), EFcom.Force_48.My.ToString("0.0"),
+                //    EFcom.Force_48.Mz.ToString("0.0"), Strength_2.ToString("0.0"),
+                //    Stability_2.ToString("0.0"), Ratio_2.ToString("0.00"));
+                //writer.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}", iElem.ToString(), "J", com,
+                //    EFcom.Force_j.N.ToString("0.0"), EFcom.Force_j.My.ToString("0.0"),
+                //    EFcom.Force_j.Mz.ToString("0.0"), Strength_j.ToString("0.0"),
+                //    Stability_j.ToString("0.0"), Ratio_j.ToString("0.00"));
+            }
+            //输出控制组合
+            writer.WriteLine("\n\n******控制组合*******: {0}", cr.CheckResTable[iElem].GetControlData().ComName);
+            writer.Close();
+            stream.Close();
+        }
 
-                /*单位转换*/
-                Strength_i = Strength_i / 1000000;//单元转为MPa
-                Strength_2 = Strength_2 / 1000000;
-                Strength_j = Strength_j / 1000000;
-                Stability_i = Stability_i / 1000000;
-                Stability_2 = Stability_2 / 1000000;
-                Stability_j = Stability_j / 1000000;
+        /// <summary>
+        /// 按截面输出验算结构表格
+        /// </summary>
+        /// <param name="mm">模型对像</param>
+        /// <param name="FileOut">输出文件路径</param>
+        /// <param name="iSec">截面号</param>
+        public static void WriteSecCheckRes(ref Bmodel mm, ref CheckRes cr,string FileOut, int iSec)
+        {
+            List<int> Elems = mm.getElemBySec(iSec);//单元号表
+            FileStream stream = File.Open(FileOut, FileMode.Create);
+            StreamWriter writer = new StreamWriter(stream);
+            writer.WriteLine("截面名称\t单元号（控制位置）\t控制组合\tN(kN)\tMy(kN*m)\tMz(kN*m)\t强度(MPa)\t稳定(MPa)\t应力比");
+            
+            foreach (int ele in Elems)
+            {
+                SingleEleCheckResData SECR=cr.CheckResTable[ele].GetControlData();
+                writer.WriteLine(mm.sections[iSec].Name+"\t"+ele.ToString()+"("+SECR.Sec_contral+")\t"+
+                    SECR.ComName+"\t"+(SECR.N/1e3).ToString("0.0")+"\t"+(SECR.My/1e3).ToString("0.0")+
+                    "\t"+(SECR.Mz/1e3).ToString("0.0")+"\t"+
+                    (SECR.Strength/1e6).ToString("0.0")+"\t"+(SECR.Stability/1e6).ToString("0.0")+"\t"+
+                    SECR.Ratio.ToString("0.00"));
+            }
 
-                EFcom = EFcom.Mutiplyby(0.001);//转为KN，m
+            writer.WriteLine("\n\n*********控制单元号**********: {0}",cr.GetControlElem(Elems).ToString());
+            writer.Close();
+            stream.Close();
+        }
 
-                double Ratio = Math.Max( Strength_i,Stability_i) / ele.DPs.fy;
-                double Ratio_2 = Math.Max(Strength_2,Stability_2) / ele.DPs.fy;
-                double Ratio_j = Math.Max(Strength_j,Stability_j) / ele.DPs.fy;
+        /// <summary>
+        /// 输出所有截面的验算结果
+        /// 按截面进行归并
+        /// </summary>
+        /// <param name="mm">模型对像</param>
+        /// <param name="cr">验算结果数据对像</param>
+        /// <param name="FileOut">输出文件路径</param>
+        public static void WriteAllCheckRes(ref Bmodel mm,ref CheckRes cr,string FileOut)
+        {
+            FileStream stream = File.Open(FileOut, FileMode.Create);
+            StreamWriter writer = new StreamWriter(stream);
+            writer.WriteLine("截面名称\t控制单元号（截面）\t控制组合\tN(kN)\tMy(kN*m)\tMz(kN*m)\t强度(MPa)\t稳定(MPa)\t应力比");
+            
+            foreach (BSections sec in mm.sections.Values)
+            {
+                List<int> curElems = cr.GetElemsBySec(ref mm,sec.Num);//当前截面信息
+                if (curElems.Count==0)
+                    continue;
+                int num_control=cr.GetControlElem(curElems);//控制单元号
+                SingleEleCheckResData secrd = cr.CheckResTable[num_control].GetControlData();
 
-                writer.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}", iElem.ToString(), "I", com,
-                    EFcom.Force_i.N.ToString("0.0"), EFcom.Force_i.My.ToString("0.0"),
-                    EFcom.Force_i.Mz.ToString("0.0"), Strength_i.ToString("0.0"),
-                    Stability_i.ToString("0.0"),Ratio.ToString("0.00"));
-                writer.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}", iElem.ToString(), "1/2", com,
-                    EFcom.Force_48.N.ToString("0.0"), EFcom.Force_48.My.ToString("0.0"),
-                    EFcom.Force_48.Mz.ToString("0.0"), Strength_2.ToString("0.0"),
-                    Stability_2.ToString("0.0"), Ratio_2.ToString("0.00"));
-                writer.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}", iElem.ToString(), "J", com,
-                    EFcom.Force_j.N.ToString("0.0"), EFcom.Force_j.My.ToString("0.0"),
-                    EFcom.Force_j.Mz.ToString("0.0"), Strength_j.ToString("0.0"),
-                    Stability_j.ToString("0.0"), Ratio_j.ToString("0.00"));
-
+                writer.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}",
+                    sec.Name,num_control.ToString()+"("+secrd.Sec_contral+")",
+                    secrd.ComName,(secrd.N/1e3).ToString("0.0"),
+                    (secrd.My/1e3).ToString("0.0"),(secrd.Mz/1e3).ToString("0.0"),
+                    (secrd.Strength/1e6).ToString("0.0"),(secrd.Stability/1e6).ToString("0.0"),
+                    secrd.Ratio.ToString("0.00"));
             }
 
             writer.Close();
@@ -473,10 +501,332 @@ namespace MidasGenModel.Design
     }
 
     /// <summary>
+    /// 单元验算结果数据类
+    /// </summary>
+    public class EleCheckResData
+    {
+        private int _iElem;//单元号
+        private Hashtable _SingleEleCheckRes;//按组合排列的单元验算表
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="num">单元号</param>
+        public EleCheckResData(int num)
+        {
+            _iElem = num;
+            _SingleEleCheckRes = new Hashtable();
+        }
+
+        /// <summary>
+        /// 向啥希表中添加验算数据
+        /// </summary>
+        /// <param name="com">组合名称</param>
+        /// <param name="ComData">组合验算结果</param>
+        public void Add(string com, SingleEleCheckResData ComData)
+        {
+            _SingleEleCheckRes.Add(com, ComData);
+        }
+
+        /// <summary>
+        /// 取得控制验算结果
+        /// </summary>
+        /// <returns></returns>
+        public SingleEleCheckResData GetControlData()
+        {
+            SingleEleCheckResData Res = new SingleEleCheckResData();
+            //对字典进行遍历
+            foreach (DictionaryEntry DE in _SingleEleCheckRes)
+            {
+                Res = Res.TheMaxRatio(DE.Value as SingleEleCheckResData);
+            }
+            return Res;
+        }
+
+        /// <summary>
+        /// 由组合名查得验算数据
+        /// </summary>
+        /// <param name="comb">组合名</param>
+        /// <returns>验算数据</returns>
+        public SingleEleCheckResData GetCheckResByCom(string comb)
+        {
+            return _SingleEleCheckRes[comb] as SingleEleCheckResData;
+        }
+    }
+
+    /// <summary>
+    /// 单个单元按组合验算结果数据类
+    /// </summary>
+    public class SingleEleCheckResData
+    {
+        private string _Sec_contral;
+        private string _ComName;
+        private double _N;
+        private double _My;
+        private double _Mz;
+        private double _Strength;
+        private double _Stability;
+        private double _Ratio;
+
+        /// <summary>
+        /// 截面位置
+        /// </summary>
+        public string Sec_contral
+        {
+            get { return _Sec_contral; }
+        }
+        /// <summary>
+        /// 组合名
+        /// </summary>
+        public string ComName
+        {
+            get { return _ComName; }
+        }
+        /// <summary>
+        /// 轴力
+        /// </summary>
+        public double N
+        {
+            get { return _N; }
+        }
+        /// <summary>
+        /// 弯矩
+        /// </summary>
+        public double My
+        {
+            get { return _My; }
+        }
+        /// <summary>
+        /// 弯矩
+        /// </summary>
+        public double Mz
+        {
+            get { return _Mz; }
+        }
+        /// <summary>
+        /// 强度验算应力
+        /// </summary>
+        public double Strength
+        {
+            get { return _Strength; }
+        }
+        /// <summary>
+        /// 稳定验算应力
+        /// </summary>
+        public double Stability
+        {
+            get { return _Stability; }
+        }
+        /// <summary>
+        /// 应力比
+        /// </summary>
+        public double Ratio
+        {
+            get { return _Ratio; }
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public SingleEleCheckResData()
+        {
+            _Sec_contral = "1/2";
+            _ComName = "None";
+            _N = 0; _My = 0; _Mz = 0;
+            _Strength = 0; _Stability = 0;
+            _Ratio = 0;
+        }
+        /// <summary>
+        /// 带参数的构造函数
+        /// </summary>
+        /// <param name="sec">截面控制点标志</param>
+        /// <param name="com">组合名</param>
+        /// <param name="N">轴向力</param>
+        /// <param name="My">弯矩</param>
+        /// <param name="Mz">弯矩</param>
+        /// <param name="Stre">强度应力</param>
+        /// <param name="Stab">稳定应力</param>
+        /// <param name="Ratio">最大应力比</param>
+        public SingleEleCheckResData(string sec, string com, double N, double My, double Mz,
+            double Stre, double Stab, double Ratio)
+        {
+            _Sec_contral = sec;
+            _ComName = com;
+            _N = N; _My = My; _Mz = Mz;
+            _Strength = Stre; _Stability = Stab;
+            _Ratio = Ratio;
+        }
+        /// <summary>
+        /// 比较两个截面应力比，返回控制应力比
+        /// </summary>
+        /// <param name="SECRD">另一个截面验算结果</param>
+        /// <returns>应力比最大的一个验算结果</returns>
+        public SingleEleCheckResData TheMaxRatio(SingleEleCheckResData SECRD)
+        {
+            if (this.Ratio >= SECRD.Ratio)
+            {
+                return this;
+            }
+            else
+            {
+                return SECRD;
+            }
+        }
+    }
+    /// <summary>
+    /// 验算结果类
+    /// </summary>
+    [Serializable]
+    public class CheckRes:Object
+    {
+        //截面验算表
+        private SortedList<int, EleCheckResData> _CheckResTable;
+
+        /// <summary>
+        /// 截面验算表
+        /// </summary>
+        public SortedList<int, EleCheckResData> CheckResTable
+        {
+            get { return _CheckResTable; }
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public CheckRes()
+        {
+            _CheckResTable = new SortedList<int, EleCheckResData>();
+        }
+        #region 截面验算方法
+        /// <summary>
+        /// 验算单个单元
+        /// </summary>
+        /// <param name="mm">模型对像</param>
+        /// <param name="iElem">单元号</param>
+        public void CheckElemByNum(ref Bmodel mm,int iElem)
+        {
+            EleCheckResData EleData = new EleCheckResData (iElem);//单元组合验算表
+
+            List<string> coms = mm.LoadCombTable.ComSteel;
+            foreach (string com in coms)
+            {
+                FrameElement ele =mm.elements[iElem] as FrameElement;
+                //先进行单元内力组合
+                ElemForce EFcom = mm.CalElemForceComb(mm.LoadCombTable[com], iElem);
+           
+                //计算强度
+                double Strength_i=CodeCheck.CalStrength_YW(EFcom.Force_i,
+                    mm.sections[ele.iPRO],
+                    ele.DPs);//i截面计算强度
+                double Strength_2 = CodeCheck.CalStrength_YW(EFcom.Force_48,
+                    mm.sections[ele.iPRO],
+                    ele.DPs);
+                double Strength_j = CodeCheck.CalStrength_YW(EFcom.Force_j,
+                    mm.sections[ele.iPRO],
+                    ele.DPs);
+                //计算稳定性强度
+                double Stability_i = CodeCheck.CalStability_YW(EFcom.Force_i, mm.sections[ele.iPRO],
+                    ele.DPs, mm.mats[ele.iMAT].Elast);
+                double Stability_2 =CodeCheck. CalStability_YW(EFcom.Force_48, mm.sections[ele.iPRO],
+                    ele.DPs, mm.mats[ele.iMAT].Elast);
+                double Stability_j =CodeCheck. CalStability_YW(EFcom.Force_j, mm.sections[ele.iPRO],
+                    ele.DPs, mm.mats[ele.iMAT].Elast);
+
+                double Ratio = Math.Max( Strength_i,Stability_i) / ele.DPs.fy;
+                double Ratio_2 = Math.Max(Strength_2,Stability_2)/ ele.DPs.fy;
+                double Ratio_j = Math.Max(Strength_j,Stability_j)/ ele.DPs.fy;
+
+                //加入到数据库
+                SingleEleCheckResData Secrd =
+                    new SingleEleCheckResData("I",com,EFcom.Force_i.N,EFcom.Force_i.My,EFcom.Force_i.Mz,
+                        Strength_i,Stability_i,Ratio);
+                SingleEleCheckResData Secrd_2=
+                    new SingleEleCheckResData("1/2", com, EFcom.Force_48.N, EFcom.Force_48.My, EFcom.Force_48.Mz,
+                        Strength_2, Stability_2, Ratio_2);
+                SingleEleCheckResData Secrd_j =
+                    new SingleEleCheckResData("J", com, EFcom.Force_j.N, EFcom.Force_j.My, EFcom.Force_j.Mz,
+                        Strength_j, Stability_j, Ratio_j);
+
+                Secrd = Secrd.TheMaxRatio(Secrd_2);//取得控制内力
+                Secrd = Secrd.TheMaxRatio(Secrd_j);
+
+                EleData.Add(com, Secrd);//添加到单元验算结果数据中
+            }
+
+            //添加到数据表
+            if (this._CheckResTable.ContainsKey(iElem))
+            {
+                this._CheckResTable.Remove(iElem);
+                this._CheckResTable.Add(iElem, EleData);
+            }
+            else
+                this._CheckResTable.Add(iElem, EleData);
+        }
+
+        /// <summary>
+        /// 验算同一截面的所有单元
+        /// </summary>
+        /// <param name="mm">模型对像</param>
+        /// <param name="iSec">截面号</param>
+        public void CheckElemBySec(ref Bmodel mm, int iSec)
+        {
+            List<int> Elems = mm.getElemBySec(iSec);//单元号组
+            foreach (int iEle in Elems)
+            {
+                CheckElemByNum(ref mm, iEle);
+            }
+        }
+
+        #endregion
+
+        #region 其它方法
+        /// <summary>
+        /// 取得单元中的控制单元
+        /// </summary>
+        /// <param name="iElems">单元号集合</param>
+        /// <returns>起控制作用的单元号</returns>
+        public int GetControlElem(List<int> iElems)
+        {
+            int Res = iElems[0];
+            for (int i = 1; i < iElems.Count; i++)
+            {
+                SingleEleCheckResData temp=this.CheckResTable[Res].GetControlData();
+                SingleEleCheckResData temp1=this.CheckResTable[iElems[i]].GetControlData();
+                if (temp.Ratio < temp1.Ratio)
+                {
+                    Res = iElems[i];
+                }
+            }
+            return Res;
+        }
+
+        /// <summary>
+        /// 取得相应截面号的单元号集合
+        /// </summary>
+        /// <param name="mm">模型对像</param>
+        /// <param name="iSec">截面号</param>
+        /// <returns>单元号集合</returns>
+        public List<int> GetElemsBySec(ref Bmodel mm,int iSec)
+        {
+            List<int> Res = new List<int>();
+            foreach (int key in _CheckResTable.Keys)
+            {
+                if (mm.elements[key].iPRO == iSec)
+                {
+                    Res.Add(key);
+                }
+            }
+            return Res;//返回
+        }
+        #endregion
+    }
+    /// <summary>
     /// 截面类别
     /// </summary>
     public enum SecCategory
     {
         a,b,c,d
     }
+
+
 }
