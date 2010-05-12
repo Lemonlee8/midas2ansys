@@ -119,12 +119,14 @@ namespace EasyMidas
                 string temp = Cursec.Remove(Cursec.IndexOf(' '));
                 iSec = Convert.ToInt32(temp);//取得截面号
             }
-            List<int> eles = CurModel.getElemBySec(iSec);
-            foreach (int ele in eles)
-            {
-                UpdataDesignPara(ele);//更新单元设计参数
-            }
+            //List<int> eles = CurModel.getElemBySec(iSec);
+            //foreach (int ele in eles)
+            //{
+            //    UpdataDesignPara(ele);//更新单元设计参数
+            //}
             CheckTable.CheckElemBySec(ref CurModel, iSec);
+
+            MessageBox.Show(Cursec + "截面验算完成！");
             return;
         }
 
@@ -158,6 +160,24 @@ namespace EasyMidas
             {
                 CodeCheck.WriteAllCheckRes(ref CurModel,ref CheckTable,sfd.FileName);
             }
+        }
+        //指定验算参数
+        private void tb_putpara_Click(object sender, EventArgs e)
+        {
+            string Cursec = cb_secs.SelectedItem.ToString();
+            int iSec = 5;
+            if (Cursec.Contains(" "))
+            {
+                string temp = Cursec.Remove(Cursec.IndexOf(' '));
+                iSec = Convert.ToInt32(temp);//取得截面号
+            }
+            List<int> eles = CurModel.getElemBySec(iSec);
+            foreach (int ele in eles)
+            {
+                UpdataDesignPara(ele);//更新单元设计参数
+            }
+
+            MessageBox.Show(Cursec+"截面验算参数指定成功！");
         }
 
     }

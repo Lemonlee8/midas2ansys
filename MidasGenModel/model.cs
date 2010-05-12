@@ -156,6 +156,10 @@ namespace MidasGenModel.model
         /// </summary>
         RS,
         /// <summary>
+        /// 偶然偏心的反应谱结果
+        /// </summary>
+        ES,
+        /// <summary>
         /// Time History 时程
         /// </summary>
         TH,
@@ -170,7 +174,11 @@ namespace MidasGenModel.model
         /// <summary>
         /// 组合
         /// </summary>
-        CB
+        CB,
+        /// <summary>
+        /// 钢结构组合
+        /// </summary>
+        CBS
     }
     /// <summary>
     ///加载方向 
@@ -2590,6 +2598,19 @@ namespace MidasGenModel.model
                 Vz * fact, My * fact, Mz * fact);
             return res;
         }
+
+        /// <summary>
+        /// 截面内力进行指数运算
+        /// </summary>
+        /// <param name="mi">幂指数</param>
+        /// <returns>新的截面内力</returns>
+        public SecForce POW(double mi)
+        {
+            SecForce Res = new SecForce(Math.Pow(_N, mi), Math.Pow(_T, mi),
+                Math.Pow(_Vy, mi), Math.Pow(_Vz, mi), Math.Pow(_My, mi),
+                Math.Pow(_Mz, mi));
+            return Res;
+        }
     }
     /// <summary>
     /// 存储单元内力的类
@@ -2796,6 +2817,20 @@ namespace MidasGenModel.model
             for (int i = 0; i < 9; i++)
             {
                 res[i]=this[i].Mutiplyby(fact);
+            }
+            return res;
+        }
+        /// <summary>
+        /// 单元内力进行指数运算
+        /// </summary>
+        /// <param name="mi">幂指数</param>
+        /// <returns>新的单元内力</returns>
+        public ElemForce Pow(double mi)
+        {
+            ElemForce res = new ElemForce();
+            for (int i = 0; i < 9; i++)
+            {
+                res[i] = this[i].POW(mi);
             }
             return res;
         }
@@ -3123,7 +3158,19 @@ namespace MidasGenModel.model
             {
                 foreach (BLCFactGroup lfg in comdata)
                 {
-                    ElemForce ef = elemforce[iElem].LCForces[lfg.LCNAME];//当前组合单元力
+                    ElemForce ef = new ElemForce();
+                    if (lfg.ANAL == ANAL.CB||lfg.ANAL==ANAL.CBS)
+                    {
+                        ef = this.CalElemForceComb(_LoadCombTable[lfg.LCNAME], iElem);//迭归组合
+                    }
+                    else if (lfg.ANAL == ANAL.RS)
+                    {
+                        ef = this.elemforce[iElem].LCForces[lfg.LCNAME + "(RS)"];
+                    }
+                    else
+                    {
+                        ef = elemforce[iElem].LCForces[lfg.LCNAME];//当前组合单元力
+                    }
                     res=res+ef.Mutiplyby(lfg.FACT);
                 }
             }
@@ -3137,7 +3184,24 @@ namespace MidasGenModel.model
             }
             else if (com.iTYPE==3)//如果为平方开根号
             {
-
+                foreach (BLCFactGroup lfg in comdata)
+                {
+                    ElemForce ef = new ElemForce();
+                    if (lfg.ANAL == ANAL.CB||lfg.ANAL==ANAL.CBS)
+                    {
+                        ef = this.CalElemForceComb(_LoadCombTable[lfg.LCNAME], iElem);//迭归组合
+                    }
+                    else if (lfg.ANAL == ANAL.RS)
+                    {
+                        ef = this.elemforce[iElem].LCForces[lfg.LCNAME + "(RS)"];
+                    }
+                    else
+                    {
+                        ef = elemforce[iElem].LCForces[lfg.LCNAME];//当前组合单元力
+                    }
+                    res = res + (ef.Mutiplyby(lfg.FACT)).Pow(2);//平方和
+                }
+                res = res.Pow(0.5);//开根号
             }
             return res;
         }
@@ -3193,7 +3257,7 @@ namespace MidasGenModel.model
             List<int> Res = new List<int>();
             foreach (Element ele in this.elements.Values)
             {
-                if (ele.iPRO == iSec)
+                if (ele.iPRO == iSec&&ele is FrameElement)
                 {
                     Res.Add(ele.iEL);
                 }
@@ -3897,6 +3961,8 @@ namespace MidasGenModel.model
                             case "MV": lcfg.ANAL = ANAL.MV; break;
                             case "ST": lcfg.ANAL = ANAL.ST; break;
                             case "CB": lcfg.ANAL = ANAL.CB; break;
+                            case "CBS": lcfg.ANAL = ANAL.CBS; break;
+                            case "ES": lcfg.ANAL = ANAL.ES; break;
                             default: lcfg.ANAL = ANAL.ST; break;
                         }
                         lcfg.LCNAME = sArrayCur[i + 1].Trim();
