@@ -104,6 +104,10 @@ namespace MidasGenModel.Design
             List<string> coms = mm.LoadCombTable.ComSteel;
             foreach (string com in coms)
             {
+                //如果组合未激活，则跳过
+                if (mm.LoadCombTable[com].bACTIVE == false)
+                    continue;
+
                 SingleEleCheckResData serd = cr.CheckResTable[iElem].GetCheckResByCom(com);
                 writer.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}", iElem.ToString(), serd.Sec_contral, com,
                     (serd.N / 1e3).ToString("0.0"), (serd.My/1e3).ToString("0.0"),
@@ -710,6 +714,9 @@ namespace MidasGenModel.Design
             List<string> coms = mm.LoadCombTable.ComSteel;
             foreach (string com in coms)
             {
+                //如果未激活则不验算
+                if (mm.LoadCombTable[com].bACTIVE == false)
+                    continue;
                 FrameElement ele =mm.elements[iElem] as FrameElement;
                 //先进行单元内力组合
                 ElemForce EFcom = mm.CalElemForceComb(mm.LoadCombTable[com], iElem);

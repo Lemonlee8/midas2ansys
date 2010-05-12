@@ -69,9 +69,8 @@ namespace EasyMidas
             {
                 ModelForm.CurModel = new MidasGenModel.model.Bmodel();
                 ModelForm.CurModel.ReadFromMgt(OPD.FileName);//读取mgt文件
-                MidasGenModel.Application.WriteModelBinary(ModelForm.CurModel, ModelFile);//写出二进制文件
+                //MidasGenModel.Application.WriteModelBinary(ModelForm.CurModel, ModelFile);//写出二进制文件
                 MessageLabel.Text = "读取模型成功！";
-                ModelForm.Text = Path.GetFileName(ModelFile);
                 ModelForm.Refresh();
                 this.Refresh();
                 ModelForm.InitContral();//更新控件
@@ -158,6 +157,55 @@ namespace EasyMidas
                      ModelForm.CurModel.elemforce.Count.ToString();
                 this.UnitLabel.Text = " 单位:" + ModelForm.CurModel.unit.Force + "," +
                     ModelForm.CurModel.unit.Length + "," + ModelForm.CurModel.unit.Temper;
+            }
+        }
+
+        private void 保存模型ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string CurDir = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
+            string CurModelPath = CurDir + "\\models";
+            string ModelFile = Path.Combine(CurModelPath, "model.emgb");
+            if (Directory.Exists(CurModelPath) == false)//如果没有模型文件目录
+            {
+                Directory.CreateDirectory(CurModelPath);//创建目录
+            }
+
+            if (ModelForm == null || ModelForm.IsDisposed)
+            {
+                MessageBox.Show("请先新建模型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                return;
+            }
+            else
+            {
+                MidasGenModel.Application.WriteModelBinary(ModelForm.CurModel, ModelFile);
+                ModelForm.Text = ModelFile;
+            }
+        }
+
+        private void 重读缓存模型ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string CurDir = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
+            string CurModelPath = CurDir + "\\models";
+            string ModelFile = Path.Combine(CurModelPath, "model.emgb");
+            if (Directory.Exists(CurModelPath) == false)//如果没有模型文件目录
+            {
+                Directory.CreateDirectory(CurModelPath);//创建目录
+            }
+
+            if (ModelForm == null || ModelForm.IsDisposed)
+            {
+                MessageBox.Show("请先新建模型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                return;
+            }
+            else if (File.Exists(ModelFile) == false)
+            {
+                MessageBox.Show("缓存文件不存在!请先保存模型...","提示",MessageBoxButtons.OK,MessageBoxIcon.Stop);
+            }
+            else 
+            {
+                ModelForm.CurModel=MidasGenModel.Application.ReadModelBinary(ModelFile);
+                ModelForm.Text = ModelFile;
+                ModelForm.InitContral();//初始化控件
             }
         }
     }

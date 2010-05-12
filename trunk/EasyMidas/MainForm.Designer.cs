@@ -32,6 +32,8 @@
             this.MessageLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.ModelInfoLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.UnitLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.开始ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.新建ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -47,8 +49,8 @@
             this.插件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.全部关闭ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.UnitLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.保存模型ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.重读缓存模型ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -87,6 +89,18 @@
             this.ModelInfoLabel.Size = new System.Drawing.Size(17, 17);
             this.ModelInfoLabel.Text = "无";
             // 
+            // toolStripStatusLabel2
+            // 
+            this.toolStripStatusLabel2.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)));
+            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
+            this.toolStripStatusLabel2.Size = new System.Drawing.Size(4, 17);
+            // 
+            // UnitLabel
+            // 
+            this.UnitLabel.Name = "UnitLabel";
+            this.UnitLabel.Size = new System.Drawing.Size(47, 17);
+            this.UnitLabel.Text = "单位:无";
+            // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -106,7 +120,9 @@
             // 
             this.开始ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.新建ToolStripMenuItem,
-            this.tm_ReadMgt});
+            this.tm_ReadMgt,
+            this.保存模型ToolStripMenuItem,
+            this.重读缓存模型ToolStripMenuItem});
             this.开始ToolStripMenuItem.Name = "开始ToolStripMenuItem";
             this.开始ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
             this.开始ToolStripMenuItem.Text = "文件";
@@ -114,14 +130,14 @@
             // 新建ToolStripMenuItem
             // 
             this.新建ToolStripMenuItem.Name = "新建ToolStripMenuItem";
-            this.新建ToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.新建ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.新建ToolStripMenuItem.Text = "新建模型";
             this.新建ToolStripMenuItem.Click += new System.EventHandler(this.新建ToolStripMenuItem_Click);
             // 
             // tm_ReadMgt
             // 
             this.tm_ReadMgt.Name = "tm_ReadMgt";
-            this.tm_ReadMgt.Size = new System.Drawing.Size(136, 22);
+            this.tm_ReadMgt.Size = new System.Drawing.Size(152, 22);
             this.tm_ReadMgt.Text = "导入Mgt文件";
             this.tm_ReadMgt.Click += new System.EventHandler(this.读取MgtToolStripMenuItem_Click);
             // 
@@ -206,17 +222,19 @@
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // toolStripStatusLabel2
+            // 保存模型ToolStripMenuItem
             // 
-            this.toolStripStatusLabel2.BorderSides = ((System.Windows.Forms.ToolStripStatusLabelBorderSides)((System.Windows.Forms.ToolStripStatusLabelBorderSides.Left | System.Windows.Forms.ToolStripStatusLabelBorderSides.Right)));
-            this.toolStripStatusLabel2.Name = "toolStripStatusLabel2";
-            this.toolStripStatusLabel2.Size = new System.Drawing.Size(4, 17);
+            this.保存模型ToolStripMenuItem.Name = "保存模型ToolStripMenuItem";
+            this.保存模型ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.保存模型ToolStripMenuItem.Text = "保存模型";
+            this.保存模型ToolStripMenuItem.Click += new System.EventHandler(this.保存模型ToolStripMenuItem_Click);
             // 
-            // UnitLabel
+            // 重读缓存模型ToolStripMenuItem
             // 
-            this.UnitLabel.Name = "UnitLabel";
-            this.UnitLabel.Size = new System.Drawing.Size(47, 17);
-            this.UnitLabel.Text = "单位:无";
+            this.重读缓存模型ToolStripMenuItem.Name = "重读缓存模型ToolStripMenuItem";
+            this.重读缓存模型ToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
+            this.重读缓存模型ToolStripMenuItem.Text = "重读缓存模型数据";
+            this.重读缓存模型ToolStripMenuItem.Click += new System.EventHandler(this.重读缓存模型ToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -263,6 +281,8 @@
         private System.Windows.Forms.ToolStripStatusLabel ModelInfoLabel;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
         private System.Windows.Forms.ToolStripStatusLabel UnitLabel;
+        private System.Windows.Forms.ToolStripMenuItem 保存模型ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 重读缓存模型ToolStripMenuItem;
     }
 }
 

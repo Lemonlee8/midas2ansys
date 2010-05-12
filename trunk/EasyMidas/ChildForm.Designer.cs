@@ -70,6 +70,7 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.button4 = new System.Windows.Forms.Button();
+            this.tb_putpara = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -137,7 +138,7 @@
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(87, 23);
             this.button2.TabIndex = 8;
-            this.button2.Text = "1.按截面验算";
+            this.button2.Text = "2.按截面验算";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
@@ -435,7 +436,7 @@
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(87, 42);
             this.button3.TabIndex = 1;
-            this.button3.Text = "2.输出指定截面验算结果表";
+            this.button3.Text = "3.输出指定截面验算结果表";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
@@ -495,13 +496,24 @@
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(87, 42);
             this.button4.TabIndex = 1;
-            this.button4.Text = "3.输出所有截面验算结果表";
+            this.button4.Text = "4.输出所有截面验算结果表";
             this.button4.UseVisualStyleBackColor = true;
             this.button4.Click += new System.EventHandler(this.button4_Click);
+            // 
+            // tb_putpara
+            // 
+            this.tb_putpara.Location = new System.Drawing.Point(416, 78);
+            this.tb_putpara.Name = "tb_putpara";
+            this.tb_putpara.Size = new System.Drawing.Size(75, 303);
+            this.tb_putpara.TabIndex = 16;
+            this.tb_putpara.Text = "1指定验算参数";
+            this.tb_putpara.UseVisualStyleBackColor = true;
+            this.tb_putpara.Click += new System.EventHandler(this.tb_putpara_Click);
             // 
             // ChildForm
             // 
             this.ClientSize = new System.Drawing.Size(654, 584);
+            this.Controls.Add(this.tb_putpara);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.lb_qiangdu);
@@ -569,6 +581,7 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Button tb_putpara;
 
 
     }
