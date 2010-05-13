@@ -208,5 +208,53 @@ namespace EasyMidas
                 ModelForm.InitContral();//初始化控件
             }
         }
+
+        private void 存储验算结果ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string CurDir = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
+            string CurModelPath = CurDir + "\\models";
+            string ModelFile = Path.Combine(CurModelPath, "model.ga");
+            if (Directory.Exists(CurModelPath) == false)//如果没有模型文件目录
+            {
+                Directory.CreateDirectory(CurModelPath);//创建目录
+            }
+
+            if (ModelForm == null || ModelForm.IsDisposed)
+            {
+                MessageBox.Show("请先新建模型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                return;
+            }
+            else
+            {
+                MidasGenModel.Application.WriteCheckBinary(ModelForm.CheckTable,ModelFile);
+                MessageLabel.Text="存储验算结果成功！";
+            }
+        }
+
+        private void 重读取验算结果ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string CurDir = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
+            string CurModelPath = CurDir + "\\models";
+            string ModelFile = Path.Combine(CurModelPath, "model.ga");
+            if (Directory.Exists(CurModelPath) == false)//如果没有模型文件目录
+            {
+                Directory.CreateDirectory(CurModelPath);//创建目录
+            }
+
+            if (ModelForm == null || ModelForm.IsDisposed)
+            {
+                MessageBox.Show("请先新建模型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                return;
+            }
+            else if (File.Exists(ModelFile) == false)
+            {
+                MessageBox.Show("缓存文件不存在!请先保存验算结果...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            }
+            else
+            {
+                ModelForm.CheckTable = MidasGenModel.Application.ReadCheckBinary(ModelFile);
+                MessageLabel.Text = "重读验算结果成功!";
+            }
+        }
     }
 }

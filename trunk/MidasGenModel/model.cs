@@ -1540,56 +1540,56 @@ namespace MidasGenModel.model
 
         private double _y1;//四个角点坐标
         //四个角点坐标
-        protected double Y1
+        public double Y1
         {
             get { return _y1; }
             set { _y1 = value; }
         }
         private double _z1;//四个角点坐标
         //四个角点坐标
-        protected double Z1
+        public  double Z1
         {
             get { return _z1; }
             set { _z1 = value; }
         }
         private double _y2;//四个角点坐标
         //四个角点坐标
-        protected double Y2
+        public  double Y2
         {
             get { return _y2; }
             set { _y2 = value; }
         }
         private double _z2;//四个角点坐标
         //四个角点坐标
-        protected double Z2
+        public  double Z2
         {
             get { return _z2; }
             set { _z2 = value; }
         }
         private double _y3;//四个角点坐标
         //四个角点坐标
-        protected double Y3
+        public  double Y3
         {
             get { return _y3; }
             set { _y3 = value; }
         }
         private double _z3;//四个角点坐标
         //四个角点坐标
-        protected double Z3
+        public  double Z3
         {
             get { return _z3; }
             set { _z3 = value; }
         }
         private double _y4;//四个角点坐标
         //四个角点坐标
-        protected double Y4
+        public  double Y4
         {
             get { return _y4; }
             set { _y4 = value; }
         }
         private double _z4;//四个角点坐标
         //四个角点坐标
-        protected double Z4
+        public  double Z4
         {
             get { return _z4; }
             set { _z4 = value; }
@@ -1706,6 +1706,23 @@ namespace MidasGenModel.model
         {
             _y1 = y1; _z1 = z1; _y2 = y2; _z2 = z2;
             _y3 = y3; _z3 = z3; _y4 = y4; _z4 = z4;
+        }
+        /// <summary>
+        /// 取得截面的指定验算点
+        /// </summary>
+        /// <param name="iPt">验算点号，目前只有1~4，共4个点数据</param>
+        /// <param name="Y">验算点Y坐标</param>
+        /// <param name="Z">验算点Z坐标</param>
+        public void getCheckPoint(int iPt, out double Y, out double Z)
+        {
+            switch (iPt)
+            {
+                case 1: Y = _y1; Z = _z1; break;
+                case 2: Y = _y2; Z = _z2; break;
+                case 3: Y = _y3; Z = _z3; break;
+                case 4: Y = _y4; Z = _z4; break;
+                default: Y = _y1; Z = _z1; break;
+            }
         }
     }
 
@@ -1890,7 +1907,21 @@ namespace MidasGenModel.model
     public class SectionGeneral : BSections
     {
         private Point2dCollection _OPOLY;
+        /// <summary>
+        /// 外轮廓点集
+        /// </summary>
+        public Point2dCollection OPOLY
+        {
+            get { return _OPOLY; }
+        }
         private List<Point2dCollection> _IPOLYs;
+        /// <summary>
+        /// 内轮廓点集
+        /// </summary>
+        public List<Point2dCollection> IPOLYs
+        {
+            get { return _IPOLYs; }
+        }
         private bool _bBU;
         private bool _bEQ;
 
@@ -4624,6 +4655,19 @@ namespace MidasGenModel.model
         public void addPt(Point2d pt)
         {
             _pts.Add(pt);
+        }
+
+        /// <summary>
+        /// 索引器
+        /// </summary>
+        /// <param name="index">索引值</param>
+        /// <returns>二维点</returns>
+        public Point2d this[int index]
+        {
+            get
+            {
+                return _pts[index];
+            }
         }
     }
 

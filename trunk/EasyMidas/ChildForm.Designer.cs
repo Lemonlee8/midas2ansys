@@ -71,6 +71,9 @@
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.button4 = new System.Windows.Forms.Button();
             this.tb_putpara = new System.Windows.Forms.Button();
+            this.button5 = new System.Windows.Forms.Button();
+            this.bt_ParaOut = new System.Windows.Forms.Button();
+            this.button7 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -510,9 +513,41 @@
             this.tb_putpara.UseVisualStyleBackColor = true;
             this.tb_putpara.Click += new System.EventHandler(this.tb_putpara_Click);
             // 
+            // button5
+            // 
+            this.button5.Location = new System.Drawing.Point(467, 474);
+            this.button5.Name = "button5";
+            this.button5.Size = new System.Drawing.Size(75, 23);
+            this.button5.TabIndex = 21;
+            this.button5.Text = "测试按钮";
+            this.button5.UseVisualStyleBackColor = true;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
+            // 
+            // bt_ParaOut
+            // 
+            this.bt_ParaOut.Location = new System.Drawing.Point(24, 517);
+            this.bt_ParaOut.Name = "bt_ParaOut";
+            this.bt_ParaOut.Size = new System.Drawing.Size(75, 41);
+            this.bt_ParaOut.TabIndex = 22;
+            this.bt_ParaOut.Text = "输出所有构件验算参数";
+            this.bt_ParaOut.UseVisualStyleBackColor = true;
+            this.bt_ParaOut.Click += new System.EventHandler(this.bt_ParaOut_Click);
+            // 
+            // button7
+            // 
+            this.button7.Location = new System.Drawing.Point(106, 517);
+            this.button7.Name = "button7";
+            this.button7.Size = new System.Drawing.Size(75, 41);
+            this.button7.TabIndex = 22;
+            this.button7.Text = "读取截面验算参数";
+            this.button7.UseVisualStyleBackColor = true;
+            // 
             // ChildForm
             // 
             this.ClientSize = new System.Drawing.Size(654, 584);
+            this.Controls.Add(this.button7);
+            this.Controls.Add(this.bt_ParaOut);
+            this.Controls.Add(this.button5);
             this.Controls.Add(this.tb_putpara);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
@@ -582,6 +617,9 @@
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button tb_putpara;
+        private System.Windows.Forms.Button button5;
+        private System.Windows.Forms.Button bt_ParaOut;
+        private System.Windows.Forms.Button button7;
 
 
     }
