@@ -13,19 +13,19 @@ namespace MidasGenModel.Design
     public class CodeCheck
     {
         /// <summary>
-        /// 计算压弯组合构件强度 GB 50017-2003 式(5.2.1) 
+        /// 计算四个最大外边角点压弯组合构件强度 GB 50017-2003 式(5.2.1) 
         /// 注：目前默认支持单位为：N,m
         /// </summary>
         /// <param name="NL">截面内力</param>
         /// <param name="Sec">截面参数</param>
         /// <param name="DPs">设计参数</param>
-        /// <returns>强度应力值</returns>
+        /// <returns>强度应力值(均为正值)</returns>
         public static double CalStrength_YW(SecForce NL,BSections Sec,DesignParameters DPs )
         {
             double Res1,Res2,Res3,Res4,RES;//返回结果
 
             double Wy=Sec.Iyy/Math.Max(Sec.CzM,Sec.CzP);//抗弯截面模量
-            double Wz=Sec.Izz/Math.Max(Sec.CyM,Sec.CzP);//抗弯截面模量
+            double Wz=Sec.Izz/Math.Max(Sec.CyM,Sec.CyP);//抗弯截面模量
             double Wny = Wy * DPs.Ratio_Anet;//净截面模量
             double Wnz = Wz * DPs.Ratio_Anet;//净截面模量
             double My=Math.Abs(NL.My);//弯矩，取绝对值
@@ -47,21 +47,98 @@ namespace MidasGenModel.Design
         }
 
         /// <summary>
-        /// 计算压弯组合构件稳定性 GB 50017-2003 式(5.2.5-1) (5.2.5-2)
+        /// 计算验算点的压弯组合构件强度 GB 50017-2003 式(5.2.1) 
+        /// </summary>
+        /// <param name="NL">截面内力</param>
+        /// <param name="Sec">截面</param>
+        /// <param name="iPt">截面中的验算点号</param>
+        /// <param name="DPs">截面验算参数</param>
+        /// <returns>强度应力(拉为正，压为负)</returns>
+        public static double CalPointStrength_YW(SecForce NL,BSections Sec,int iPt,DesignParameters DPs)
+        {
+            double y, z,Res;
+            if (Sec is SectionDBuser)
+            {
+                Sec.getCheckPoint(iPt, out y, out z);//取得截面验算点坐标
+            }
+            else if (Sec is SectionGeneral)//如果为自定截面则验算所有外轮廓点
+            {
+                SectionGeneral GenSec = Sec as SectionGeneral;
+                y = GenSec.OPOLY[iPt].X;
+                z = GenSec.OPOLY[iPt].Y;
+            }
+            else
+            {
+                y = 0; z = 0;
+            }
+            
+            //如果验算点为0,0,则直接返回0应力值
+            if (y == 0 && z == 0)
+            {
+                return 0;
+            }
+            double Wy=Sec.Iyy/z;//抗弯截面模量
+            double Wz=Sec.Izz/y;//抗弯截面模量
+            double Wny = Wy * DPs.Ratio_Anet;//净截面模量
+            double Wnz = Wz * DPs.Ratio_Anet;//净截面模量
+            double My=-(NL.My);//弯矩，取内力的反号:参Midsa手册02 P16页梁单元内力输出方向
+            double Mz=-(NL.Mz);
+
+            Res = NL.N / (Sec.Area * DPs.Ratio_Anet) +
+                My / (DPs.Gamma_y * Wny) + Mz / (DPs.Gamma_z * Wnz);
+            return Res;
+        }
+        /// <summary>
+        /// 计算截面验算点上的强度最大值（绝对值）
+        /// </summary>
+        /// <param name="NL">截面内力</param>
+        /// <param name="Sec">截面对像</param>
+        /// <param name="DPs">单元设计参数</param>
+        /// <returns>截面强度应力值（绝对值）</returns>
+        public static double CalSecMaxStrength_YW(SecForce NL, BSections Sec, DesignParameters DPs)
+        {
+            double Res = 0;
+            List<double> slist = new List<double>();
+            int count=4;
+            if (Sec is SectionGeneral)
+            {
+                SectionGeneral secg = Sec as SectionGeneral;
+                count = secg.OPOLY.Length;
+            }
+            else
+            {
+                count = 4;
+            }
+            //添加到结果表
+            for (int i = 0; i < count; i++)
+            {
+                slist.Add(CodeCheck.CalPointStrength_YW(NL, Sec, i, DPs));
+            }
+
+            //求得集合中的最大值
+            foreach (double ss in slist)
+            {
+                Res = Math.Max(Res, Math.Abs(ss));
+            }
+            return Res;
+        }
+
+        /// <summary>
+        /// 计算四个最大外边角点压弯组合构件稳定性 GB 50017-2003 式(5.2.5-1) (5.2.5-2)
         /// 注：目前默认支持单位为：N,m
         /// </summary>
         /// <param name="NL">截面内力</param>
         /// <param name="Sec">截面参数</param>
         /// <param name="DPs">设计参数</param>
         /// <param name="E">材料的弹性模量</param>
-        /// <returns>稳定验算应力值</returns>
+        /// <returns>稳定验算应力值(均为正值)</returns>
         public static double CalStability_YW(SecForce NL, BSections Sec, DesignParameters DPs,
             double E)
         {
             double Res1, Res2,RES;//分别对应(5.2.5-1) (5.2.5-2)式结果
 
             double Wy = Sec.Iyy / Math.Max(Sec.CzM, Sec.CzP);//抗弯截面模量
-            double Wz = Sec.Izz / Math.Max(Sec.CyM, Sec.CzP);//抗弯截面模量
+            double Wz = Sec.Izz / Math.Max(Sec.CyM, Sec.CyP);//抗弯截面模量
             double N = NL.N;//轴向力
             double My = Math.Abs(NL.My);//弯矩，取绝对值
             double Mz = Math.Abs(NL.Mz);
@@ -183,6 +260,43 @@ namespace MidasGenModel.Design
                     (secrd.My/1e3).ToString("0.0"),(secrd.Mz/1e3).ToString("0.0"),
                     (secrd.Strength/1e6).ToString("0.0"),(secrd.Stability/1e6).ToString("0.0"),
                     secrd.Ratio.ToString("0.00"));
+            }
+
+            writer.Close();
+            stream.Close();
+        }
+
+        /// <summary>
+        /// 输出所有截面验算参数设置
+        /// </summary>
+        /// <param name="mm"></param>
+        /// <param name="cr"></param>
+        /// <param name="FileOut"></param>
+        public static void WriteCheckPara(ref Bmodel mm, ref CheckRes cr, string FileOut)
+        {
+            FileStream stream = File.Open(FileOut, FileMode.Create);
+            StreamWriter writer = new StreamWriter(stream);
+            writer.WriteLine("截面号\t截面名称\t平面内计算长度\t平面外计算长度\t材料设计强度\t净毛面积比\t塑性发展系数γx\t"+
+                "塑性发展系数γy\t等效弯矩系数βmx\t等效弯矩系数βmy\t等效弯矩系数βtx\t等效弯矩系数βty\t"+
+                "受弯稳定系数ψbx\t受弯稳定系数ψby\t平面内长细比\t平面外长细比");
+
+            foreach (BSections sec in mm.sections.Values)
+            {
+                List<int> tempElem = mm.getElemBySec(sec.Num);
+                int eNum=tempElem[0];
+                double eLeng=mm.getFrameLength(eNum);
+                FrameElement fe = mm.elements[eNum] as FrameElement;
+                DesignParameters DP = fe.DPs;
+                double ly=DP.Lk_y*eLeng;
+                double lz=DP.Lk_z*eLeng;
+                writer.Write("{0}\t{1}\t{2}\t{3}",sec.Num.ToString(),sec.Name,ly.ToString("0.00"),lz.ToString("0.00"));
+                writer.Write("\t{0}\t{1}\t{2}",DP.fy.ToString("0"),DP.Ratio_Anet.ToString("0.00"),DP.Gamma_y.ToString("0.0"));
+                writer.Write("\t{0}\t{1}\t{2}",DP.Gamma_z.ToString("0.0"),DP.Belta_my.ToString("0.0"),
+                    DP.Belta_mz.ToString("0.0"));
+                writer.Write("\t{0}\t{1}",DP.Belta_ty.ToString("0.0"),DP.Belta_tz.ToString("0.0"));
+                writer.Write("\t{0}\t{1}", DP.Phi_by.ToString("0.00"),DP.Phi_bz.ToString("0.00"));
+                writer.Write("\t{0}\t{1}",DP.Lemda_y.ToString("0.00"),DP.Lemda_z.ToString("0.00") );
+                writer.Write("\n");
             }
 
             writer.Close();
@@ -507,6 +621,7 @@ namespace MidasGenModel.Design
     /// <summary>
     /// 单元验算结果数据类
     /// </summary>
+    [Serializable]
     public class EleCheckResData
     {
         private int _iElem;//单元号
@@ -561,6 +676,7 @@ namespace MidasGenModel.Design
     /// <summary>
     /// 单个单元按组合验算结果数据类
     /// </summary>
+    [Serializable]
     public class SingleEleCheckResData
     {
         private string _Sec_contral;
@@ -722,13 +838,13 @@ namespace MidasGenModel.Design
                 ElemForce EFcom = mm.CalElemForceComb(mm.LoadCombTable[com], iElem);
            
                 //计算强度
-                double Strength_i=CodeCheck.CalStrength_YW(EFcom.Force_i,
+                double Strength_i=CodeCheck.CalSecMaxStrength_YW(EFcom.Force_i,
                     mm.sections[ele.iPRO],
                     ele.DPs);//i截面计算强度
-                double Strength_2 = CodeCheck.CalStrength_YW(EFcom.Force_48,
+                double Strength_2 = CodeCheck.CalSecMaxStrength_YW(EFcom.Force_48,
                     mm.sections[ele.iPRO],
                     ele.DPs);
-                double Strength_j = CodeCheck.CalStrength_YW(EFcom.Force_j,
+                double Strength_j = CodeCheck.CalSecMaxStrength_YW(EFcom.Force_j,
                     mm.sections[ele.iPRO],
                     ele.DPs);
                 //计算稳定性强度
@@ -783,7 +899,6 @@ namespace MidasGenModel.Design
                 CheckElemByNum(ref mm, iEle);
             }
         }
-
         #endregion
 
         #region 其它方法

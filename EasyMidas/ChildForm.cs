@@ -66,7 +66,7 @@ namespace EasyMidas
         }
 
         /// <summary>
-        /// 按单无更新截面设计参数
+        /// 按单元更新截面设计参数
         /// </summary>
         /// <param name="iEle">单元号</param>
         public void UpdataDesignPara(int iEle)
@@ -178,6 +178,32 @@ namespace EasyMidas
             }
 
             MessageBox.Show(Cursec+"截面验算参数指定成功！");
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            ElemForce ef = CurModel.CalElemForceComb(CurModel.LoadCombTable["sGen2"], 4);
+            SecForce sf=ef.Force_i;
+            FrameElement fe=CurModel.elements[4] as FrameElement;
+            BSections sec=CurModel.sections[fe.iPRO];
+            double s1 = CodeCheck.CalPointStrength_YW(sf, sec, 1, fe.DPs);
+            double s2 = CodeCheck.CalPointStrength_YW(sf, sec, 2, fe.DPs);
+            double s3=CodeCheck.CalPointStrength_YW(sf, sec, 3, fe.DPs);
+            double s4 = CodeCheck.CalPointStrength_YW(sf, sec, 4, fe.DPs);
+            return;
+        }
+
+        //输出所有构件验算参数设置
+        private void bt_ParaOut_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Title = "请输入结果文件存储位置";
+            sfd.Filter = "txt 文件(*.txt)|*.txt|All files (*.*)|*.*";
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                CodeCheck.WriteCheckPara(ref CurModel, ref CheckTable, sfd.FileName);
+            }
         }
 
     }

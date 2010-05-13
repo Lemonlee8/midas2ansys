@@ -38,6 +38,8 @@
             this.开始ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.新建ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tm_ReadMgt = new System.Windows.Forms.ToolStripMenuItem();
+            this.保存模型ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.重读缓存模型ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.前处理ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.读取内力ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.荷载组合编辑ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -49,8 +51,8 @@
             this.插件ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.全部关闭ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.保存模型ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.重读缓存模型ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.存储验算结果ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.重读取验算结果ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -130,16 +132,30 @@
             // 新建ToolStripMenuItem
             // 
             this.新建ToolStripMenuItem.Name = "新建ToolStripMenuItem";
-            this.新建ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.新建ToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.新建ToolStripMenuItem.Text = "新建模型";
             this.新建ToolStripMenuItem.Click += new System.EventHandler(this.新建ToolStripMenuItem_Click);
             // 
             // tm_ReadMgt
             // 
             this.tm_ReadMgt.Name = "tm_ReadMgt";
-            this.tm_ReadMgt.Size = new System.Drawing.Size(152, 22);
+            this.tm_ReadMgt.Size = new System.Drawing.Size(166, 22);
             this.tm_ReadMgt.Text = "导入Mgt文件";
             this.tm_ReadMgt.Click += new System.EventHandler(this.读取MgtToolStripMenuItem_Click);
+            // 
+            // 保存模型ToolStripMenuItem
+            // 
+            this.保存模型ToolStripMenuItem.Name = "保存模型ToolStripMenuItem";
+            this.保存模型ToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
+            this.保存模型ToolStripMenuItem.Text = "保存模型";
+            this.保存模型ToolStripMenuItem.Click += new System.EventHandler(this.保存模型ToolStripMenuItem_Click);
+            // 
+            // 重读缓存模型ToolStripMenuItem
+            // 
+            this.重读缓存模型ToolStripMenuItem.Name = "重读缓存模型ToolStripMenuItem";
+            this.重读缓存模型ToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
+            this.重读缓存模型ToolStripMenuItem.Text = "重读缓存模型数据";
+            this.重读缓存模型ToolStripMenuItem.Click += new System.EventHandler(this.重读缓存模型ToolStripMenuItem_Click);
             // 
             // 前处理ToolStripMenuItem
             // 
@@ -175,15 +191,18 @@
             // 钢结构验算ToolStripMenuItem
             // 
             this.钢结构验算ToolStripMenuItem.Name = "钢结构验算ToolStripMenuItem";
-            this.钢结构验算ToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.钢结构验算ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.钢结构验算ToolStripMenuItem.Text = "钢结构验算";
             this.钢结构验算ToolStripMenuItem.Click += new System.EventHandler(this.钢结构验算ToolStripMenuItem_Click);
             // 
             // 测试验算ToolStripMenuItem
             // 
+            this.测试验算ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.存储验算结果ToolStripMenuItem,
+            this.重读取验算结果ToolStripMenuItem});
             this.测试验算ToolStripMenuItem.Name = "测试验算ToolStripMenuItem";
-            this.测试验算ToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
-            this.测试验算ToolStripMenuItem.Text = "测试验算";
+            this.测试验算ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.测试验算ToolStripMenuItem.Text = "验算结果存取";
             this.测试验算ToolStripMenuItem.Click += new System.EventHandler(this.测试验算ToolStripMenuItem_Click);
             // 
             // 帮助ToolStripMenuItem
@@ -197,7 +216,7 @@
             // 前于ToolStripMenuItem
             // 
             this.前于ToolStripMenuItem.Name = "前于ToolStripMenuItem";
-            this.前于ToolStripMenuItem.Size = new System.Drawing.Size(94, 22);
+            this.前于ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.前于ToolStripMenuItem.Text = "关于";
             // 
             // 插件ToolStripMenuItem
@@ -222,19 +241,19 @@
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // 保存模型ToolStripMenuItem
+            // 存储验算结果ToolStripMenuItem
             // 
-            this.保存模型ToolStripMenuItem.Name = "保存模型ToolStripMenuItem";
-            this.保存模型ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.保存模型ToolStripMenuItem.Text = "保存模型";
-            this.保存模型ToolStripMenuItem.Click += new System.EventHandler(this.保存模型ToolStripMenuItem_Click);
+            this.存储验算结果ToolStripMenuItem.Name = "存储验算结果ToolStripMenuItem";
+            this.存储验算结果ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.存储验算结果ToolStripMenuItem.Text = "存储验算结果";
+            this.存储验算结果ToolStripMenuItem.Click += new System.EventHandler(this.存储验算结果ToolStripMenuItem_Click);
             // 
-            // 重读缓存模型ToolStripMenuItem
+            // 重读取验算结果ToolStripMenuItem
             // 
-            this.重读缓存模型ToolStripMenuItem.Name = "重读缓存模型ToolStripMenuItem";
-            this.重读缓存模型ToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.重读缓存模型ToolStripMenuItem.Text = "重读缓存模型数据";
-            this.重读缓存模型ToolStripMenuItem.Click += new System.EventHandler(this.重读缓存模型ToolStripMenuItem_Click);
+            this.重读取验算结果ToolStripMenuItem.Name = "重读取验算结果ToolStripMenuItem";
+            this.重读取验算结果ToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.重读取验算结果ToolStripMenuItem.Text = "重读取验算结果";
+            this.重读取验算结果ToolStripMenuItem.Click += new System.EventHandler(this.重读取验算结果ToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -283,6 +302,8 @@
         private System.Windows.Forms.ToolStripStatusLabel UnitLabel;
         private System.Windows.Forms.ToolStripMenuItem 保存模型ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 重读缓存模型ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 存储验算结果ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 重读取验算结果ToolStripMenuItem;
     }
 }
 
