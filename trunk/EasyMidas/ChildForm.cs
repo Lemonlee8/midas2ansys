@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
 using MidasGenModel.model;
 using MidasGenModel.Design;
 
@@ -47,18 +48,22 @@ namespace EasyMidas
         public  void InitContral()
         {
             cb_secs.Items.Clear();
+            cb_secs2.Items.Clear();
             if (CurModel.sections.Count > 0)
             {
                 foreach (BSections sec in CurModel.sections.Values)
                 {
                     cb_secs.Items.Add(sec.Num+" "+sec.Name);
+                    cb_secs2.Items.Add(sec.Num + " " + sec.Name);
                 }
             }
             else
             {
                 cb_secs.Items.Add("无");
+                cb_secs2.Items.Add("无");
             }
             cb_secs.SelectedIndex = 0;
+            cb_secs2.SelectedIndex = 0;
 
             lb_changdu.Text = CurModel.unit.Length;
             lb_changdu2.Text = CurModel.unit.Length;
@@ -84,6 +89,7 @@ namespace EasyMidas
             double Phi_by = Convert.ToDouble(tb_phibx.Text);
             double Phi_bz = Convert.ToDouble(tb_phiby.Text);
             double F = Convert.ToDouble(tb_f.Text);//强度设计值
+            double Gamma_re = Convert.ToDouble(tb_GammaRe.Text);//承载力调整系数
             SecCategory cat=SecCategory.b;
 
             switch(comboBox1.SelectedIndex)
@@ -109,6 +115,7 @@ namespace EasyMidas
             fele.DPs.Belta_ty = Betal_ty;
             fele.DPs.Belta_tz = Betal_tz;
             fele.DPs.fy = F;//强度设计值
+            fele.DPs.Gamma_re = Gamma_re;
         }
         private void button2_Click(object sender, EventArgs e)
         {
@@ -119,11 +126,10 @@ namespace EasyMidas
                 string temp = Cursec.Remove(Cursec.IndexOf(' '));
                 iSec = Convert.ToInt32(temp);//取得截面号
             }
-            //List<int> eles = CurModel.getElemBySec(iSec);
-            //foreach (int ele in eles)
-            //{
-            //    UpdataDesignPara(ele);//更新单元设计参数
-            //}
+            //按选择激活相应组合
+            CurModel.RSCombineActive(cb_CheckQuake.Checked);
+
+
             CheckTable.CheckElemBySec(ref CurModel, iSec);
 
             MessageBox.Show(Cursec + "截面验算完成！");
@@ -139,13 +145,23 @@ namespace EasyMidas
                 string temp = Cursec.Remove(Cursec.IndexOf(' '));
                 iSec = Convert.ToInt32(temp);//取得截面号
             }
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Title = "请输入结果文件存储位置";
-            sfd.Filter = "txt 文件(*.txt)|*.txt|All files (*.*)|*.*";
+            FolderBrowserDialog fbd = new FolderBrowserDialog();
+            fbd.Description = "请选择文件存储位置";         
 
-            if (sfd.ShowDialog() == DialogResult.OK)
+            if (fbd.ShowDialog()==DialogResult.OK)
             {
-               CodeCheck.WriteSecCheckRes(ref CurModel,ref CheckTable,sfd.FileName,iSec);
+                string curPath = fbd.SelectedPath;
+                int i = 0;
+                foreach (BSections sec in CurModel.sections.Values)
+                {
+                    List<int> curElems = CheckTable.GetElemsBySec(ref CurModel, sec.Num);//当前截面信息
+                    if (curElems.Count == 0)
+                        continue;
+                    string FileName=Path.Combine(curPath,sec.Name+".txt");
+                    CodeCheck.WriteSecCheckRes(ref CurModel, ref CheckTable,FileName , sec.Num);
+                    i++;
+                }
+                MessageBox.Show(i.ToString()+"个截面数据输出完成。");
             }
         }
 
@@ -204,6 +220,32 @@ namespace EasyMidas
             {
                 CodeCheck.WriteCheckPara(ref CurModel, ref CheckTable, sfd.FileName);
             }
+        }
+
+        private void bt_findRaio_Click(object sender, EventArgs e)
+        {
+            double r1=Convert.ToDouble(tb_R_min.Text);
+            double r2=Convert.ToDouble(tb_R_max.Text);
+            string Cursec =cb_secs2.SelectedItem.ToString();
+            int iSec = 5;
+            if (Cursec.Contains(" "))
+            {
+                string temp = Cursec.Remove(Cursec.IndexOf(' '));
+                iSec = Convert.ToInt32(temp);//取得截面号
+            }
+
+            List<int> Elems = CheckTable.GetElemsByRatio(r1, r2);//取得所有截面号
+
+            string Res = "";
+            //以下按截面进行过滤
+            foreach (int ele in Elems)
+            {
+                if (CurModel.elements[ele].iPRO == iSec)
+                {
+                    Res=Res+" "+ele.ToString();
+                }
+            }
+            rtb_Messagebox.Text = Res;
         }
 
     }

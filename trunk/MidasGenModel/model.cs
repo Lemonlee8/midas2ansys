@@ -380,6 +380,23 @@ namespace MidasGenModel.model
             }
             return false;
         }
+
+        /// <summary>
+        /// 判断当年组合是否含有某种类型工况，如地震反应谱
+        /// </summary>
+        /// <param name="type">工况类型</param>
+        /// <returns>是或否</returns>
+        public bool hasLC_ANAL(ANAL type)
+        {
+            foreach (BLCFactGroup bfg in _LoadCombData)
+            {
+                if (bfg.ANAL==type)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /// <summary>
@@ -1467,7 +1484,7 @@ namespace MidasGenModel.model
         protected double _Area;//面积
         protected double _ASy;//单元坐标系y轴方向的有效剪切面积
         protected double _ASz;//单元坐标系z轴方向的有效剪切面积
-        private double _Ixx;//截面扭转贯性矩
+        protected double _Ixx;//截面扭转贯性矩
         /// <summary>
         /// 截面扭转贯性矩
         /// </summary>
@@ -1476,7 +1493,7 @@ namespace MidasGenModel.model
             get { return _Ixx; }
             set { _Ixx = value; }
         }
-        private double _Iyy;//单元绕y轴的截面贯性矩
+        protected double _Iyy;//单元绕y轴的截面贯性矩
         /// <summary>
         /// 单元绕y轴的截面贯性矩
         /// </summary>
@@ -1485,7 +1502,7 @@ namespace MidasGenModel.model
             get { return _Iyy; }
             set { _Iyy = value; }
         }
-        private double _Izz;//单元绕z轴的截面贯性矩
+        protected double _Izz;//单元绕z轴的截面贯性矩
         /// <summary>
         /// 单元绕z轴的截面贯性矩
         /// </summary>
@@ -1495,7 +1512,7 @@ namespace MidasGenModel.model
             set { _Izz = value; }
         }
 
-        private double _CyP;//自中和轴到单元坐标系(+)y方向最外端的距离
+        protected double _CyP;//自中和轴到单元坐标系(+)y方向最外端的距离
         /// <summary>
         /// 自中和轴到单元坐标系(+)y方向最外端的距离
         /// </summary>
@@ -1504,7 +1521,7 @@ namespace MidasGenModel.model
             get { return _CyP; }
             set { _CyP = value; }
         }
-        private double _CyM;//自中和轴到单元坐标系(-)y方向最外端的距离
+        protected double _CyM;//自中和轴到单元坐标系(-)y方向最外端的距离
         /// <summary>
         /// 自中和轴到单元坐标系(-)y方向最外端的距离
         /// </summary>
@@ -1513,7 +1530,7 @@ namespace MidasGenModel.model
             get { return _CyM; }
             set { _CyM = value; }
         }
-        private double _CzP;//自中和轴到单元坐标系(+)z方向最外端的距离
+        protected double _CzP;//自中和轴到单元坐标系(+)z方向最外端的距离
         /// <summary>
         /// 自中和轴到单元坐标系(+)z方向最外端的距离
         /// </summary>
@@ -1522,7 +1539,7 @@ namespace MidasGenModel.model
             get { return _CzP; }
             set { _CzP = value; }
         }
-        private double _CzM;//自中和轴到单元坐标系(-)z方向最外端的距离
+        protected double _CzM;//自中和轴到单元坐标系(-)z方向最外端的距离
         /// <summary>
         /// 自中和轴到单元坐标系(-)z方向最外端的距离
         /// </summary>
@@ -1538,56 +1555,56 @@ namespace MidasGenModel.model
         protected double _Cy;//截面形心y坐标
         protected double _Cz;//截面形心z坐标
 
-        private double _y1;//四个角点坐标
+        protected double _y1;//四个角点坐标
         //四个角点坐标
         public double Y1
         {
             get { return _y1; }
             set { _y1 = value; }
         }
-        private double _z1;//四个角点坐标
+        protected double _z1;//四个角点坐标
         //四个角点坐标
         public  double Z1
         {
             get { return _z1; }
             set { _z1 = value; }
         }
-        private double _y2;//四个角点坐标
+        protected double _y2;//四个角点坐标
         //四个角点坐标
         public  double Y2
         {
             get { return _y2; }
             set { _y2 = value; }
         }
-        private double _z2;//四个角点坐标
+        protected double _z2;//四个角点坐标
         //四个角点坐标
         public  double Z2
         {
             get { return _z2; }
             set { _z2 = value; }
         }
-        private double _y3;//四个角点坐标
+        protected double _y3;//四个角点坐标
         //四个角点坐标
         public  double Y3
         {
             get { return _y3; }
             set { _y3 = value; }
         }
-        private double _z3;//四个角点坐标
+        protected double _z3;//四个角点坐标
         //四个角点坐标
         public  double Z3
         {
             get { return _z3; }
             set { _z3 = value; }
         }
-        private double _y4;//四个角点坐标
+        protected double _y4;//四个角点坐标
         //四个角点坐标
         public  double Y4
         {
             get { return _y4; }
             set { _y4 = value; }
         }
-        private double _z4;//四个角点坐标
+        protected double _z4;//四个角点坐标
         //四个角点坐标
         public  double Z4
         {
@@ -1803,23 +1820,94 @@ namespace MidasGenModel.model
             //throw new NotImplementedException();
             if (this.SSHAPE == SecShape.B && (int)this.SEC_Data[0] == 2)//箱形截面
             {
-                this._Area = 0;
-                //todo:面积计算实现
+                double D_h = Convert.ToDouble(SEC_Data[1]);
+                double D_b = Convert.ToDouble(SEC_Data[2]);
+                double D_tw = Convert.ToDouble(SEC_Data[3]);
+                double D_tf = Convert.ToDouble(SEC_Data[4]);
+                this._Area = D_h*D_b-(D_h-2*D_tf)*(D_b-2*D_tw);//面积
+                this._ASy = 2 * D_b * D_tf;//有效剪切面积
+                this._ASz = 2 * D_h * D_tw;//有效剪切面积
+                this._Ixx = 2 * Math.Pow((D_b-D_tw) * (D_h-D_tf), 2) / ((D_b-D_tw) / D_tf + (D_h-D_tf) / D_tw);//抗扭刚度
+                this._Iyy = D_b * Math.Pow(D_h, 3) / 12 - (D_b - 2 * D_tw) * Math.Pow(D_h - 2 * D_tf, 3) / 12;//抗弯刚度
+                this._Izz = D_h * Math.Pow(D_b, 3) / 12 - (D_h - 2 * D_tf) * Math.Pow(D_b - 2 * D_tw, 3) / 12;//抗弯刚度
+                this._Cy = D_b / 2;
+                this._Cz = D_h / 2;
+                this._y1 = -D_b / 2;
+                this._z1 = D_h / 2;
+                this._y2 = D_b / 2;
+                this._z2 = D_h / 2;
+                this._y3 = D_b / 2;
+                this._z3 = -D_h / 2;
+                this._y4 = -D_b / 2;
+                this._z4 = -D_h / 2;
+                //todo:剪切系数和内外表面积未计算
             }
             else if (this.SSHAPE == SecShape.H && (int)this.SEC_Data[0] == 2)//H型截面
             {
-                this._Area = 0;
-                //todo:面积计算实现
+                double h = Convert.ToDouble(SEC_Data[1]);
+                double b = Convert.ToDouble(SEC_Data[2]);
+                double tw = Convert.ToDouble(SEC_Data[3]);
+                double tf = Convert.ToDouble(SEC_Data[4]);
+                this._Area = h*b-(h-2*tf)*(b-tw);//面积
+                this._ASy = 5*(2*b*tf)/6;//有效剪切面积
+                this._ASz = h*tw;//有效剪切面积
+                this._Ixx = (h*Math.Pow(tw,3)+2*b*Math.Pow(tf,3))/3;//抗扭刚度
+                this._Iyy = b * Math.Pow(h, 3) / 12 - (b - tw) * Math.Pow(h - 2 * tf, 3) / 12;//抗弯刚度
+                this._Izz = 2*tf * Math.Pow(b, 3) / 12 +(h-2*tf)*Math.Pow(tw,3)/12;//抗弯刚度
+                this._Cy = b / 2;
+                this._Cz = h / 2;
+                this._y1 = -b / 2;
+                this._z1 = h / 2;
+                this._y2 = b / 2;
+                this._z2 = h / 2;
+                this._y3 = b / 2;
+                this._z3 = -h / 2;
+                this._y4 = -b / 2;
+                this._z4 = -h / 2;
+                //todo:剪切系数和内外表面积未计算
             }
             else if (this.SSHAPE == SecShape.P && (int)this.SEC_Data[0] == 2)//圆管截面
             {
-                double ri = (double)SEC_Data[1] / 2 - (double)SEC_Data[2];
+                double tw=Convert.ToDouble(SEC_Data[2]);//壁厚
+                double ri = (double)SEC_Data[1] / 2 - tw;
                 double ro = (double)SEC_Data[1] / 2;
                 this._Area = Math.PI * Math.Pow(ro, 2) - Math.PI * Math.Pow(ri, 2);
+                this._ASy = Math.PI * (ri + tw / 2) * tw;//有效剪切面积
+                this._ASz = Math.PI * (ri + tw / 2) * tw; ;//有效剪切面积
+                this._Ixx = Math.PI*(Math.Pow(ro,4)-Math.Pow(ri,4))/2;//抗扭刚度
+                this._Iyy = Math.PI * Math.Pow(2 * ro, 4) / 64 - Math.PI * Math.Pow(2 * ri, 4) / 64;//抗弯刚度
+                this._Izz = Math.PI * Math.Pow(2 * ro, 4) / 64 - Math.PI * Math.Pow(2 * ri, 4) / 64;//抗弯刚度
+                this._Cy = ro;
+                this._Cz = ro;
+                this._y1 = 0;
+                this._z1 =ro;
+                this._y2 = ro;
+                this._z2 = 0;
+                this._y3 =0;
+                this._z3 = -ro;
+                this._y4 = -ro;
+                this._z4 = 0;
             }
             else if (this.SSHAPE == SecShape.SB && (int)this.SEC_Data[0] == 2)//矩形截面
             {
-                this._Area = 0;
+                double D_h = Convert.ToDouble(SEC_Data[1]);
+                double D_b = Convert.ToDouble(SEC_Data[2]);
+                this._Area = D_h * D_b;//面积
+                this._ASy = 5 * D_b * D_h / 6;//有效剪切面积
+                this._ASz = 5 * D_b * D_h / 6;//有效剪切面积
+                this._Ixx =0;//抗扭刚度
+                this._Iyy = D_b * Math.Pow(D_h, 3) / 12 ;//抗弯刚度
+                this._Izz = D_h * Math.Pow(D_b, 3) / 12 ;//抗弯刚度
+                this._Cy = D_b / 2;
+                this._Cz = D_h / 2;
+                this._y1 = -D_b / 2;
+                this._z1 = D_h / 2;
+                this._y2 = D_b / 2;
+                this._z2 = D_h / 2;
+                this._y3 = D_b / 2;
+                this._z3 = -D_h / 2;
+                this._y4 = -D_b / 2;
+                this._z4 = -D_h / 2;
                 //todo:面积计算实现
             }
             else if (this.SSHAPE == SecShape.T && (int)this.SEC_Data[0] == 2)//T型截面
@@ -3294,6 +3382,45 @@ namespace MidasGenModel.model
                 }
             }
             return Res;
+        }
+
+        /// <summary>
+        /// 地震反应谱组合和静力组合激活相互切换
+        /// </summary>
+        /// <param name="bActive">是否激活地震组合</param>
+        public void RSCombineActive(bool bActive)
+        {
+            List<string> coms = LoadCombTable.ComSteel;//钢结构设计组合
+            if (bActive == true)
+            {//激活地震组合
+                foreach (string com in coms)
+                {
+                    BLoadComb lc=LoadCombTable[com];
+                    if (lc.hasLC_ANAL(ANAL.RS) || lc.hasLC_ANAL(ANAL.ES))
+                    {
+                        LoadCombTable[com].bACTIVE = true;
+                    }
+                    else
+                    {
+                        LoadCombTable[com].bACTIVE = false;
+                    }
+                }
+            }
+            else
+            {//激活非地震组合
+                foreach (string com in coms)
+                {
+                    BLoadComb lc = LoadCombTable[com];
+                    if (lc.hasLC_ANAL(ANAL.RS) || lc.hasLC_ANAL(ANAL.ES))
+                    {
+                        LoadCombTable[com].bACTIVE = false;
+                    }
+                    else
+                    {
+                        LoadCombTable[com].bACTIVE = true;
+                    }
+                }
+            }
         }
         #endregion
         #region model类输入输出接口方法
