@@ -437,6 +437,7 @@ namespace MidasGenModel.Design
         private double _Yita;//截面影响系数GB50017-2003 P48 ：闭口截面取0.7,其它截面取1.0
 
         private double _fy;//抗拉，抗压强度设计值
+        private double _Gamma_re;//承载力抗震调整系数
 
         #region 属性
         /// <summary>
@@ -579,6 +580,15 @@ namespace MidasGenModel.Design
         }
 
         /// <summary>
+        /// 承载力抗震调整系数
+        /// </summary>
+        public double Gamma_re
+        {
+            get { return _Gamma_re; }
+            set { _Gamma_re = value; }
+        }
+
+        /// <summary>
         /// 截面影响系数GB50017-2003 P48 ：闭口截面取0.7,其它截面取1.0
         /// </summary>
         public double Yita
@@ -610,8 +620,9 @@ namespace MidasGenModel.Design
             _lk_y = 1;
             _lk_z = 1;
 
-            _fy = 295;
+            _fy = 310e6;
             _Yita = 1.0;
+            _Gamma_re = 0.75;
         }
 
         #region 方法
@@ -830,30 +841,39 @@ namespace MidasGenModel.Design
             List<string> coms = mm.LoadCombTable.ComSteel;
             foreach (string com in coms)
             {
+                double gamma_re = 1.0;//承载力抗震调整系数
                 //如果未激活则不验算
                 if (mm.LoadCombTable[com].bACTIVE == false)
                     continue;
-                FrameElement ele =mm.elements[iElem] as FrameElement;
+                 FrameElement ele =mm.elements[iElem] as FrameElement;
+
+                //若为地震组合则取存储的承载力抗震调整系数
+                if (mm.LoadCombTable[com].hasLC_ANAL(ANAL.ES) ||
+                    mm.LoadCombTable[com].hasLC_ANAL(ANAL.RS))
+                {
+                    gamma_re = ele.DPs.Gamma_re;
+                }
+               
                 //先进行单元内力组合
                 ElemForce EFcom = mm.CalElemForceComb(mm.LoadCombTable[com], iElem);
            
                 //计算强度
                 double Strength_i=CodeCheck.CalSecMaxStrength_YW(EFcom.Force_i,
                     mm.sections[ele.iPRO],
-                    ele.DPs);//i截面计算强度
+                    ele.DPs)*gamma_re;//i截面计算强度
                 double Strength_2 = CodeCheck.CalSecMaxStrength_YW(EFcom.Force_48,
                     mm.sections[ele.iPRO],
-                    ele.DPs);
+                    ele.DPs)*gamma_re;
                 double Strength_j = CodeCheck.CalSecMaxStrength_YW(EFcom.Force_j,
                     mm.sections[ele.iPRO],
-                    ele.DPs);
+                    ele.DPs)*gamma_re;
                 //计算稳定性强度
                 double Stability_i = CodeCheck.CalStability_YW(EFcom.Force_i, mm.sections[ele.iPRO],
-                    ele.DPs, mm.mats[ele.iMAT].Elast);
+                    ele.DPs, mm.mats[ele.iMAT].Elast)*gamma_re;
                 double Stability_2 =CodeCheck. CalStability_YW(EFcom.Force_48, mm.sections[ele.iPRO],
-                    ele.DPs, mm.mats[ele.iMAT].Elast);
+                    ele.DPs, mm.mats[ele.iMAT].Elast)*gamma_re;
                 double Stability_j =CodeCheck. CalStability_YW(EFcom.Force_j, mm.sections[ele.iPRO],
-                    ele.DPs, mm.mats[ele.iMAT].Elast);
+                    ele.DPs, mm.mats[ele.iMAT].Elast)*gamma_re;
 
                 double Ratio = Math.Max( Strength_i,Stability_i) / ele.DPs.fy;
                 double Ratio_2 = Math.Max(Strength_2,Stability_2)/ ele.DPs.fy;
@@ -939,6 +959,26 @@ namespace MidasGenModel.Design
                 }
             }
             return Res;//返回
+        }
+
+        /// <summary>
+        /// 根据应力比范围取得单元号集合
+        /// </summary>
+        /// <param name="R_min">最小应力比</param>
+        /// <param name="R_max">最大应力比</param>
+        /// <returns>单元号集合</returns>
+        public List<int> GetElemsByRatio(double R_min, double R_max)
+        {
+            List<int> Res = new List<int>();
+            foreach (int key in _CheckResTable.Keys)
+            {
+                SingleEleCheckResData secrd=_CheckResTable[key].GetControlData();
+                if (secrd.Ratio > R_min && secrd.Ratio < R_max)
+                {
+                    Res.Add(key);
+                }
+            }
+            return Res;
         }
         #endregion
     }

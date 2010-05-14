@@ -74,10 +74,25 @@
             this.button5 = new System.Windows.Forms.Button();
             this.bt_ParaOut = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
+            this.cb_CheckQuake = new System.Windows.Forms.CheckBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.tb_GammaRe = new System.Windows.Forms.TextBox();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.label18 = new System.Windows.Forms.Label();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.tb_R_min = new System.Windows.Forms.TextBox();
+            this.tb_R_max = new System.Windows.Forms.TextBox();
+            this.label19 = new System.Windows.Forms.Label();
+            this.cb_secs2 = new System.Windows.Forms.ComboBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.rtb_Messagebox = new System.Windows.Forms.RichTextBox();
+            this.bt_findRaio = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
+            this.panel1.SuspendLayout();
+            this.groupBox5.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -147,6 +162,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.cb_CheckQuake);
             this.groupBox1.Controls.Add(this.lb_changdu2);
             this.groupBox1.Controls.Add(this.lb_changdu);
             this.groupBox1.Controls.Add(this.label4);
@@ -155,6 +171,8 @@
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.tb_leng2);
             this.groupBox1.Controls.Add(this.tb_leng1);
+            this.groupBox1.Controls.Add(this.tb_GammaRe);
+            this.groupBox1.Controls.Add(this.label17);
             this.groupBox1.Location = new System.Drawing.Point(12, 51);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(398, 122);
@@ -439,7 +457,7 @@
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(87, 42);
             this.button3.TabIndex = 1;
-            this.button3.Text = "3.输出指定截面验算结果表";
+            this.button3.Text = "3.输出所有截面验算结果表";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
@@ -507,7 +525,7 @@
             // 
             this.tb_putpara.Location = new System.Drawing.Point(416, 78);
             this.tb_putpara.Name = "tb_putpara";
-            this.tb_putpara.Size = new System.Drawing.Size(75, 303);
+            this.tb_putpara.Size = new System.Drawing.Size(46, 303);
             this.tb_putpara.TabIndex = 16;
             this.tb_putpara.Text = "1指定验算参数";
             this.tb_putpara.UseVisualStyleBackColor = true;
@@ -515,7 +533,8 @@
             // 
             // button5
             // 
-            this.button5.Location = new System.Drawing.Point(467, 474);
+            this.button5.Enabled = false;
+            this.button5.Location = new System.Drawing.Point(198, 526);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(75, 23);
             this.button5.TabIndex = 21;
@@ -535,6 +554,7 @@
             // 
             // button7
             // 
+            this.button7.Enabled = false;
             this.button7.Location = new System.Drawing.Point(106, 517);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(75, 41);
@@ -542,9 +562,138 @@
             this.button7.Text = "读取截面验算参数";
             this.button7.UseVisualStyleBackColor = true;
             // 
+            // cb_CheckQuake
+            // 
+            this.cb_CheckQuake.AutoSize = true;
+            this.cb_CheckQuake.Location = new System.Drawing.Point(284, 100);
+            this.cb_CheckQuake.Name = "cb_CheckQuake";
+            this.cb_CheckQuake.Size = new System.Drawing.Size(96, 16);
+            this.cb_CheckQuake.TabIndex = 11;
+            this.cb_CheckQuake.Text = "验算抗震组合";
+            this.cb_CheckQuake.UseVisualStyleBackColor = true;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(249, 64);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(53, 24);
+            this.label17.TabIndex = 12;
+            this.label17.Text = "抗震调整\r\n系数γre";
+            // 
+            // tb_GammaRe
+            // 
+            this.tb_GammaRe.Location = new System.Drawing.Point(312, 65);
+            this.tb_GammaRe.Name = "tb_GammaRe";
+            this.tb_GammaRe.Size = new System.Drawing.Size(58, 21);
+            this.tb_GammaRe.TabIndex = 13;
+            this.tb_GammaRe.Text = "0.8";
+            this.tb_GammaRe.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.groupBox5);
+            this.panel1.Location = new System.Drawing.Point(486, 51);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(273, 446);
+            this.panel1.TabIndex = 23;
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.BackColor = System.Drawing.Color.YellowGreen;
+            this.label18.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label18.Location = new System.Drawing.Point(468, 51);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(7, 470);
+            this.label18.TabIndex = 24;
+            this.label18.Text = "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n";
+            // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.bt_findRaio);
+            this.groupBox5.Controls.Add(this.rtb_Messagebox);
+            this.groupBox5.Controls.Add(this.tb_R_max);
+            this.groupBox5.Controls.Add(this.tb_R_min);
+            this.groupBox5.Controls.Add(this.label20);
+            this.groupBox5.Controls.Add(this.label19);
+            this.groupBox5.Controls.Add(this.cb_secs2);
+            this.groupBox5.Location = new System.Drawing.Point(3, 3);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(267, 437);
+            this.groupBox5.TabIndex = 0;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "验算结果查询";
+            // 
+            // tb_R_min
+            // 
+            this.tb_R_min.Location = new System.Drawing.Point(109, 28);
+            this.tb_R_min.Name = "tb_R_min";
+            this.tb_R_min.Size = new System.Drawing.Size(42, 21);
+            this.tb_R_min.TabIndex = 0;
+            this.tb_R_min.Text = "0.9";
+            // 
+            // tb_R_max
+            // 
+            this.tb_R_max.Location = new System.Drawing.Point(177, 28);
+            this.tb_R_max.Name = "tb_R_max";
+            this.tb_R_max.Size = new System.Drawing.Size(42, 21);
+            this.tb_R_max.TabIndex = 0;
+            this.tb_R_max.Text = "1.5";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(28, 31);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(65, 12);
+            this.label19.TabIndex = 5;
+            this.label19.Text = "应力比范围";
+            // 
+            // cb_secs2
+            // 
+            this.cb_secs2.DropDownHeight = 300;
+            this.cb_secs2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cb_secs2.FormattingEnabled = true;
+            this.cb_secs2.IntegralHeight = false;
+            this.cb_secs2.Location = new System.Drawing.Point(109, 59);
+            this.cb_secs2.Name = "cb_secs2";
+            this.cb_secs2.Size = new System.Drawing.Size(121, 20);
+            this.cb_secs2.TabIndex = 8;
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(28, 62);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(53, 12);
+            this.label20.TabIndex = 5;
+            this.label20.Text = "截面类型";
+            // 
+            // rtb_Messagebox
+            // 
+            this.rtb_Messagebox.BackColor = System.Drawing.SystemColors.InactiveCaptionText;
+            this.rtb_Messagebox.Location = new System.Drawing.Point(6, 133);
+            this.rtb_Messagebox.Name = "rtb_Messagebox";
+            this.rtb_Messagebox.Size = new System.Drawing.Size(255, 298);
+            this.rtb_Messagebox.TabIndex = 9;
+            this.rtb_Messagebox.Text = "";
+            // 
+            // bt_findRaio
+            // 
+            this.bt_findRaio.Location = new System.Drawing.Point(30, 96);
+            this.bt_findRaio.Name = "bt_findRaio";
+            this.bt_findRaio.Size = new System.Drawing.Size(75, 23);
+            this.bt_findRaio.TabIndex = 10;
+            this.bt_findRaio.Text = "开始查询";
+            this.bt_findRaio.UseVisualStyleBackColor = true;
+            this.bt_findRaio.Click += new System.EventHandler(this.bt_findRaio_Click);
+            // 
             // ChildForm
             // 
-            this.ClientSize = new System.Drawing.Size(654, 584);
+            this.ClientSize = new System.Drawing.Size(794, 584);
+            this.Controls.Add(this.label18);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.button7);
             this.Controls.Add(this.bt_ParaOut);
             this.Controls.Add(this.button5);
@@ -567,6 +716,9 @@
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -620,6 +772,19 @@
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Button bt_ParaOut;
         private System.Windows.Forms.Button button7;
+        private System.Windows.Forms.CheckBox cb_CheckQuake;
+        private System.Windows.Forms.TextBox tb_GammaRe;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.TextBox tb_R_max;
+        private System.Windows.Forms.TextBox tb_R_min;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.RichTextBox rtb_Messagebox;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.ComboBox cb_secs2;
+        private System.Windows.Forms.Button bt_findRaio;
 
 
     }
