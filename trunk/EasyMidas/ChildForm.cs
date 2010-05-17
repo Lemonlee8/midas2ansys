@@ -105,8 +105,10 @@ namespace EasyMidas
             CodeCheck.CalDesignPara_lemda(ref CurModel, num, len_y, len_z);
             //更新受压稳定系数
             CodeCheck.CalDesignPara_phi(ref CurModel, num, 1, cat);
+            CodeCheck.CalDesignPara_phi(ref CurModel, num, 2, cat);
             //更新其它参数
             FrameElement fele = CurModel.elements[num] as FrameElement;
+            fele.DPs.SecCat = cat;//截面类别
             fele.DPs.Ratio_Anet = Net_r;
             fele.DPs.Gamma_y = Gamma_y;
             fele.DPs.Gamma_z = Gamma_z;
@@ -246,6 +248,20 @@ namespace EasyMidas
                 }
             }
             rtb_Messagebox.Text = Res;
+        }
+
+        //读取截面设计设置参数
+        private void button7_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog OPD = new OpenFileDialog();
+            OPD.Title = "选择截面验算参数文件路径";
+            OPD.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);//获取我的文档
+            OPD.Filter = "txt 文件(*.txt)|*.txt|All files (*.*)|*.*";
+
+            if (OPD.ShowDialog() == DialogResult.OK)
+            {
+                CodeCheck.ReadCheckPara(ref CurModel,ref CheckTable,OPD.FileName);
+            }
         }
 
     }

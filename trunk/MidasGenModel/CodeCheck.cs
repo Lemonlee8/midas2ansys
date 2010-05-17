@@ -278,7 +278,8 @@ namespace MidasGenModel.Design
             StreamWriter writer = new StreamWriter(stream);
             writer.WriteLine("截面号\t截面名称\t平面内计算长度\t平面外计算长度\t材料设计强度\t净毛面积比\t塑性发展系数γx\t"+
                 "塑性发展系数γy\t等效弯矩系数βmx\t等效弯矩系数βmy\t等效弯矩系数βtx\t等效弯矩系数βty\t"+
-                "受弯稳定系数ψbx\t受弯稳定系数ψby\t平面内长细比\t平面外长细比");
+                "受弯稳定系数ψbx\t受弯稳定系数ψby\t平面内长细比\t平面外长细比"+
+                "\t截面类别\t抗震承力调整系数γre");
 
             foreach (BSections sec in mm.sections.Values)
             {
@@ -290,17 +291,92 @@ namespace MidasGenModel.Design
                 double ly=DP.Lk_y*eLeng;
                 double lz=DP.Lk_z*eLeng;
                 writer.Write("{0}\t{1}\t{2}\t{3}",sec.Num.ToString(),sec.Name,ly.ToString("0.00"),lz.ToString("0.00"));
-                writer.Write("\t{0}\t{1}\t{2}",DP.fy.ToString("0"),DP.Ratio_Anet.ToString("0.00"),DP.Gamma_y.ToString("0.0"));
-                writer.Write("\t{0}\t{1}\t{2}",DP.Gamma_z.ToString("0.0"),DP.Belta_my.ToString("0.0"),
-                    DP.Belta_mz.ToString("0.0"));
-                writer.Write("\t{0}\t{1}",DP.Belta_ty.ToString("0.0"),DP.Belta_tz.ToString("0.0"));
+                writer.Write("\t{0}\t{1}\t{2}",DP.fy.ToString("0"),DP.Ratio_Anet.ToString("0.00"),DP.Gamma_y.ToString("0.00"));
+                writer.Write("\t{0}\t{1}\t{2}",DP.Gamma_z.ToString("0.00"),DP.Belta_my.ToString("0.00"),
+                    DP.Belta_mz.ToString("0.00"));
+                writer.Write("\t{0}\t{1}",DP.Belta_ty.ToString("0.00"),DP.Belta_tz.ToString("0.00"));
                 writer.Write("\t{0}\t{1}", DP.Phi_by.ToString("0.00"),DP.Phi_bz.ToString("0.00"));
                 writer.Write("\t{0}\t{1}",DP.Lemda_y.ToString("0.00"),DP.Lemda_z.ToString("0.00") );
+                writer.Write("\t{0}\t{1}","b",DP.Gamma_re.ToString("0.00"));
                 writer.Write("\n");
             }
 
             writer.Close();
             stream.Close();
+        }
+
+        /// <summary>
+        /// 读入截面验算的设置参数
+        /// </summary>
+        /// <param name="mm"></param>
+        /// <param name="cr"></param>
+        /// <param name="FileIn"></param>
+        public static void ReadCheckPara(ref Bmodel mm, ref CheckRes cr, string FileIn)
+        {
+            string line = null;//行文本
+            string[] curdata = null;//当前行数据变量
+            int curNum = 0;//当前截面号
+
+            FileStream stream = File.Open(FileIn, FileMode.Open, FileAccess.Read);
+            StreamReader reader = new StreamReader(stream);
+            line = reader.ReadLine();
+
+            for (line = reader.ReadLine(); line != null; line = reader.ReadLine())
+            {
+                curdata = line.Split("\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);//字符串分割
+                curNum = Convert.ToInt32(curdata[0]);//当前截面号
+
+                List<int> eles = mm.getElemBySec(curNum);//当前截面的单元集
+                foreach (int ele in eles)
+                {
+                    if (!(mm.elements[ele] is FrameElement))
+                        continue;
+                    FrameElement fe = mm.elements[ele] as FrameElement;
+
+                    double len_y = Convert.ToDouble(curdata[2]);
+                    double len_z = Convert.ToDouble(curdata[3]);
+                    double Net_r = Convert.ToDouble(curdata[5]);
+                    double Gamma_y = Convert.ToDouble(curdata[6]);
+                    double Gamma_z = Convert.ToDouble(curdata[7]);
+                    double Betla_my = Convert.ToDouble(curdata[8]);
+                    double Betal_mz = Convert.ToDouble(curdata[9]);
+                    double Betal_ty = Convert.ToDouble(curdata[10]);
+                    double Betal_tz = Convert.ToDouble(curdata[11]);
+                    double Phi_by = Convert.ToDouble(curdata[12]);
+                    double Phi_bz = Convert.ToDouble(curdata[13]);
+                    double F = Convert.ToDouble(curdata[4]);//强度设计值
+                    double Gamma_re = Convert.ToDouble(curdata[17]);//承载力调整系数
+                    SecCategory cat=SecCategory.b;
+                    switch (curdata[16])
+                    {
+                        case "a": cat = SecCategory.a; break;
+                        case "b": cat = SecCategory.b; break;
+                        case "c": cat = SecCategory.c; break;
+                        case "d": cat = SecCategory.d; break;
+                        default: cat = SecCategory.b; break;
+                    }
+
+
+                    //更新长细比
+                    CodeCheck.CalDesignPara_lemda(ref mm, ele, len_y, len_z);
+                    //更新受压稳定系数
+                    CodeCheck.CalDesignPara_phi(ref mm, ele, 1, cat);
+                    CodeCheck.CalDesignPara_phi(ref mm, ele, 2, cat);
+
+                    fe.DPs.SecCat = cat;
+                    fe.DPs.Ratio_Anet = Net_r;
+                    fe.DPs.Gamma_y = Gamma_y;
+                    fe.DPs.Gamma_z = Gamma_z;
+                    fe.DPs.Belta_my = Betla_my;
+                    fe.DPs.Belta_mz = Betal_mz;
+                    fe.DPs.Belta_ty = Betal_ty;
+                    fe.DPs.Belta_tz = Betal_tz;
+                    fe.DPs.fy = F;//强度设计值
+                    fe.DPs.Gamma_re = Gamma_re;
+                }
+            }
+
+            reader.Close();
         }
 
         /// <summary>
@@ -438,6 +514,7 @@ namespace MidasGenModel.Design
 
         private double _fy;//抗拉，抗压强度设计值
         private double _Gamma_re;//承载力抗震调整系数
+        private SecCategory _SecCat;//截面类别
 
         #region 属性
         /// <summary>
@@ -596,6 +673,13 @@ namespace MidasGenModel.Design
             get { return _Yita; }
             set { _Yita = value; }
         }
+
+        //截面类别
+        public SecCategory SecCat
+        {
+            get { return _SecCat; }
+            set { _SecCat = value; }
+        }
         #endregion
 
         /// <summary>
@@ -623,6 +707,7 @@ namespace MidasGenModel.Design
             _fy = 310e6;
             _Yita = 1.0;
             _Gamma_re = 0.75;
+            _SecCat = SecCategory.b;
         }
 
         #region 方法
