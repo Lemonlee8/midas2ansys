@@ -36,10 +36,13 @@
             this.label3 = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cb_CheckQuake = new System.Windows.Forms.CheckBox();
             this.lb_changdu2 = new System.Windows.Forms.Label();
             this.lb_changdu = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.cb_secs = new System.Windows.Forms.ComboBox();
+            this.tb_GammaRe = new System.Windows.Forms.TextBox();
+            this.label17 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.tb_betla4 = new System.Windows.Forms.TextBox();
             this.tb_phiby = new System.Windows.Forms.TextBox();
@@ -74,19 +77,16 @@
             this.button5 = new System.Windows.Forms.Button();
             this.bt_ParaOut = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
-            this.cb_CheckQuake = new System.Windows.Forms.CheckBox();
-            this.label17 = new System.Windows.Forms.Label();
-            this.tb_GammaRe = new System.Windows.Forms.TextBox();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.label18 = new System.Windows.Forms.Label();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.tb_R_min = new System.Windows.Forms.TextBox();
+            this.bt_findRaio = new System.Windows.Forms.Button();
+            this.rtb_Messagebox = new System.Windows.Forms.RichTextBox();
             this.tb_R_max = new System.Windows.Forms.TextBox();
+            this.tb_R_min = new System.Windows.Forms.TextBox();
+            this.label20 = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
             this.cb_secs2 = new System.Windows.Forms.ComboBox();
-            this.label20 = new System.Windows.Forms.Label();
-            this.rtb_Messagebox = new System.Windows.Forms.RichTextBox();
-            this.bt_findRaio = new System.Windows.Forms.Button();
+            this.label18 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -180,6 +180,16 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "截面验算参数";
             // 
+            // cb_CheckQuake
+            // 
+            this.cb_CheckQuake.AutoSize = true;
+            this.cb_CheckQuake.Location = new System.Drawing.Point(284, 100);
+            this.cb_CheckQuake.Name = "cb_CheckQuake";
+            this.cb_CheckQuake.Size = new System.Drawing.Size(96, 16);
+            this.cb_CheckQuake.TabIndex = 11;
+            this.cb_CheckQuake.Text = "验算抗震组合";
+            this.cb_CheckQuake.UseVisualStyleBackColor = true;
+            // 
             // lb_changdu2
             // 
             this.lb_changdu2.AutoSize = true;
@@ -217,6 +227,24 @@
             this.cb_secs.Name = "cb_secs";
             this.cb_secs.Size = new System.Drawing.Size(121, 20);
             this.cb_secs.TabIndex = 8;
+            // 
+            // tb_GammaRe
+            // 
+            this.tb_GammaRe.Location = new System.Drawing.Point(312, 65);
+            this.tb_GammaRe.Name = "tb_GammaRe";
+            this.tb_GammaRe.Size = new System.Drawing.Size(58, 21);
+            this.tb_GammaRe.TabIndex = 13;
+            this.tb_GammaRe.Text = "0.8";
+            this.tb_GammaRe.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(249, 64);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(53, 24);
+            this.label17.TabIndex = 12;
+            this.label17.Text = "抗震调整\r\n系数γre";
             // 
             // groupBox2
             // 
@@ -554,41 +582,13 @@
             // 
             // button7
             // 
-            this.button7.Enabled = false;
             this.button7.Location = new System.Drawing.Point(106, 517);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(75, 41);
             this.button7.TabIndex = 22;
             this.button7.Text = "读取截面验算参数";
             this.button7.UseVisualStyleBackColor = true;
-            // 
-            // cb_CheckQuake
-            // 
-            this.cb_CheckQuake.AutoSize = true;
-            this.cb_CheckQuake.Location = new System.Drawing.Point(284, 100);
-            this.cb_CheckQuake.Name = "cb_CheckQuake";
-            this.cb_CheckQuake.Size = new System.Drawing.Size(96, 16);
-            this.cb_CheckQuake.TabIndex = 11;
-            this.cb_CheckQuake.Text = "验算抗震组合";
-            this.cb_CheckQuake.UseVisualStyleBackColor = true;
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(249, 64);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(53, 24);
-            this.label17.TabIndex = 12;
-            this.label17.Text = "抗震调整\r\n系数γre";
-            // 
-            // tb_GammaRe
-            // 
-            this.tb_GammaRe.Location = new System.Drawing.Point(312, 65);
-            this.tb_GammaRe.Name = "tb_GammaRe";
-            this.tb_GammaRe.Size = new System.Drawing.Size(58, 21);
-            this.tb_GammaRe.TabIndex = 13;
-            this.tb_GammaRe.Text = "0.8";
-            this.tb_GammaRe.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
             // 
             // panel1
             // 
@@ -597,17 +597,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(273, 446);
             this.panel1.TabIndex = 23;
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.BackColor = System.Drawing.Color.YellowGreen;
-            this.label18.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label18.Location = new System.Drawing.Point(468, 51);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(7, 470);
-            this.label18.TabIndex = 24;
-            this.label18.Text = "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n";
             // 
             // groupBox5
             // 
@@ -625,13 +614,24 @@
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "验算结果查询";
             // 
-            // tb_R_min
+            // bt_findRaio
             // 
-            this.tb_R_min.Location = new System.Drawing.Point(109, 28);
-            this.tb_R_min.Name = "tb_R_min";
-            this.tb_R_min.Size = new System.Drawing.Size(42, 21);
-            this.tb_R_min.TabIndex = 0;
-            this.tb_R_min.Text = "0.9";
+            this.bt_findRaio.Location = new System.Drawing.Point(30, 96);
+            this.bt_findRaio.Name = "bt_findRaio";
+            this.bt_findRaio.Size = new System.Drawing.Size(75, 23);
+            this.bt_findRaio.TabIndex = 10;
+            this.bt_findRaio.Text = "开始查询";
+            this.bt_findRaio.UseVisualStyleBackColor = true;
+            this.bt_findRaio.Click += new System.EventHandler(this.bt_findRaio_Click);
+            // 
+            // rtb_Messagebox
+            // 
+            this.rtb_Messagebox.BackColor = System.Drawing.SystemColors.InactiveCaptionText;
+            this.rtb_Messagebox.Location = new System.Drawing.Point(6, 133);
+            this.rtb_Messagebox.Name = "rtb_Messagebox";
+            this.rtb_Messagebox.Size = new System.Drawing.Size(255, 298);
+            this.rtb_Messagebox.TabIndex = 9;
+            this.rtb_Messagebox.Text = "";
             // 
             // tb_R_max
             // 
@@ -640,6 +640,23 @@
             this.tb_R_max.Size = new System.Drawing.Size(42, 21);
             this.tb_R_max.TabIndex = 0;
             this.tb_R_max.Text = "1.5";
+            // 
+            // tb_R_min
+            // 
+            this.tb_R_min.Location = new System.Drawing.Point(109, 28);
+            this.tb_R_min.Name = "tb_R_min";
+            this.tb_R_min.Size = new System.Drawing.Size(42, 21);
+            this.tb_R_min.TabIndex = 0;
+            this.tb_R_min.Text = "0.9";
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(28, 62);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(53, 12);
+            this.label20.TabIndex = 5;
+            this.label20.Text = "截面类型";
             // 
             // label19
             // 
@@ -661,33 +678,16 @@
             this.cb_secs2.Size = new System.Drawing.Size(121, 20);
             this.cb_secs2.TabIndex = 8;
             // 
-            // label20
+            // label18
             // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(28, 62);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(53, 12);
-            this.label20.TabIndex = 5;
-            this.label20.Text = "截面类型";
-            // 
-            // rtb_Messagebox
-            // 
-            this.rtb_Messagebox.BackColor = System.Drawing.SystemColors.InactiveCaptionText;
-            this.rtb_Messagebox.Location = new System.Drawing.Point(6, 133);
-            this.rtb_Messagebox.Name = "rtb_Messagebox";
-            this.rtb_Messagebox.Size = new System.Drawing.Size(255, 298);
-            this.rtb_Messagebox.TabIndex = 9;
-            this.rtb_Messagebox.Text = "";
-            // 
-            // bt_findRaio
-            // 
-            this.bt_findRaio.Location = new System.Drawing.Point(30, 96);
-            this.bt_findRaio.Name = "bt_findRaio";
-            this.bt_findRaio.Size = new System.Drawing.Size(75, 23);
-            this.bt_findRaio.TabIndex = 10;
-            this.bt_findRaio.Text = "开始查询";
-            this.bt_findRaio.UseVisualStyleBackColor = true;
-            this.bt_findRaio.Click += new System.EventHandler(this.bt_findRaio_Click);
+            this.label18.AutoSize = true;
+            this.label18.BackColor = System.Drawing.Color.YellowGreen;
+            this.label18.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label18.Location = new System.Drawing.Point(468, 51);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(7, 470);
+            this.label18.TabIndex = 24;
+            this.label18.Text = "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n";
             // 
             // ChildForm
             // 
