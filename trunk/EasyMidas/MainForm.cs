@@ -8,15 +8,29 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Reflection;
+using SerializerProgress;
+using MidasGenModel.model;
 
 namespace EasyMidas
 {
     public partial class MainForm : Form
     {
         private static ChildForm ModelForm;//模型主视图窗口
+        private BackgroundWorker _BackWorker;//后台单独进程
+        private string _tempFileName;//模型文件存储路径
         public MainForm()
         {
             InitializeComponent();
+
+            _BackWorker = new BackgroundWorker();//创建后台进程
+            _BackWorker.WorkerReportsProgress = true;//可以报告进程更新
+            _BackWorker.WorkerSupportsCancellation = false;//进程不支持取消
+
+            string CurDir = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
+            string CurModelPath = CurDir + "\\models";
+            _tempFileName = Path.Combine(CurModelPath, "model.emgb");//取得模型文件默认存储路径
+
+            stusProgressBar.Visible = false;//先不显示进度条
         }
 
         private void 读取MgtToolStripMenuItem_Click(object sender, EventArgs e)
@@ -183,15 +197,8 @@ namespace EasyMidas
         }
 
         private void 重读缓存模型ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            string CurDir = new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName;
-            string CurModelPath = CurDir + "\\models";
-            string ModelFile = Path.Combine(CurModelPath, "model.emgb");
-            if (Directory.Exists(CurModelPath) == false)//如果没有模型文件目录
-            {
-                Directory.CreateDirectory(CurModelPath);//创建目录
-            }
-
+        {;
+            string ModelFile = _tempFileName;
             if (ModelForm == null || ModelForm.IsDisposed)
             {
                 MessageBox.Show("请先新建模型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Stop);
@@ -203,9 +210,21 @@ namespace EasyMidas
             }
             else 
             {
-                ModelForm.CurModel=MidasGenModel.Application.ReadModelBinary(ModelFile);
-                ModelForm.Text = ModelFile;
-                ModelForm.InitContral();//初始化控件
+                //ModelForm.CurModel=MidasGenModel.Application.ReadModelBinary(ModelFile);
+                _BackWorker.ProgressChanged += delegate(object sender1, ProgressChangedEventArgs e1)
+                {
+                    stusProgressBar.Value = e1.ProgressPercentage;
+                };
+                _BackWorker.DoWork+=new DoWorkEventHandler(Deserialize);
+                _BackWorker.RunWorkerCompleted += delegate
+                {
+                    MessageLabel.Text = "读取缓存模型完成!";
+                    ModelForm.Text = _tempFileName;
+                    ModelForm.InitContral();//初始化控件
+                    stusProgressBar.Visible = false;
+                };
+                stusProgressBar.Visible = true;//显示状态进度栏
+                _BackWorker.RunWorkerAsync();//开始后台读取操作
             }
         }
 
@@ -254,6 +273,24 @@ namespace EasyMidas
             {
                 ModelForm.CheckTable = MidasGenModel.Application.ReadCheckBinary(ModelFile);
                 MessageLabel.Text = "重读验算结果成功!";
+            }
+        }
+
+        /// <summary>
+        /// 反序列化文件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Deserialize(object sender, DoWorkEventArgs e)
+        {
+            using (FileStream fs = File.OpenRead(_tempFileName))
+            {
+                Bmodel result = Utilities.Deserialize<Bmodel>(fs,
+                    delegate(object sender2, ProgressChangedEventArgs e2)
+                    {
+                        _BackWorker.ReportProgress(e2.ProgressPercentage);
+                    });
+                ModelForm.CurModel = result;//存储到当前模型中
             }
         }
     }
