@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using MidasGenModel.model;
+using MidasGenModel.Geometry3d;
 using System.IO;
 using System.Collections;
 
@@ -136,9 +137,23 @@ namespace MidasGenModel.Design
             double E)
         {
             double Res1, Res2,RES;//分别对应(5.2.5-1) (5.2.5-2)式结果
-
-            double Wy = Sec.Iyy / Math.Max(Sec.CzM, Sec.CzP);//抗弯截面模量
-            double Wz = Sec.Izz / Math.Max(Sec.CyM, Sec.CyP);//抗弯截面模量
+            double Wy, Wz;//抗弯截面模量
+            if (NL.My >= 0)
+            {
+                Wy = Sec.Iyy / Sec.CzP;//+z侧受压
+            }
+            else
+            {
+                Wy = Sec.Iyy / Sec.CzM;//-z侧受压
+            }
+            if (NL.Mz >= 0)
+            {
+                Wz = Sec.Izz / Sec.CyP;//+y侧受压
+            }
+            else
+            {
+                Wz = Sec.Izz / Sec.CyM;//-y侧受压
+            }
             double N = NL.N;//轴向力
             double My = Math.Abs(NL.My);//弯矩，取绝对值
             double Mz = Math.Abs(NL.Mz);
@@ -163,6 +178,91 @@ namespace MidasGenModel.Design
 
             RES = Math.Max(Math.Abs(Res1), Math.Abs(Res2));
             return RES;
+        }
+
+        /// <summary>
+        /// 计算验算点的稳定性应力 GB 50017-2003 式(5.2.5-1) (5.2.5-2)
+        /// </summary>
+        /// <param name="NL">截面内力</param>
+        /// <param name="Sec">截面</param>
+        /// <param name="Pt">截面验算点，以截面形心为原点</param>
+        /// <param name="DPs">截面验算参数</param>
+        /// <param name="E">材料弹性模量</param>
+        /// <returns>稳定应力(为正或0)</returns>
+        public static double CalPointStability(SecForce NL, BSections Sec, Point2d Pt, DesignParameters DPs,double E)
+        {
+            double y, z, Res,Sta1,Sta2;
+            y = Pt.X; z = Pt.Y;
+            
+            double N = NL.N;//轴向力
+            double My = NL.My;//弯矩
+            double Mz = NL.Mz;
+
+            //参数
+            double N_ey = Math.Pow(Math.PI, 2) * E * Sec.Area / (1.1 * Math.Pow(DPs.Lemda_y, 2));
+            double N_ez = Math.Pow(Math.PI, 2) * E * Sec.Area / (1.1 * Math.Pow(DPs.Lemda_z, 2));
+
+            double Ref_Ny = 1;//与轴压力有关的参数
+            double Ref_Nz = 1;
+            if (N < 0)//如为轴压力对参数进行调整
+            {
+                Ref_Ny = 1 - 0.8 * Math.Abs(N) / N_ey;
+                Ref_Nz = 1 - 0.8 * Math.Abs(N) / N_ez;
+            }
+
+            //进行功能计算，注意弯矩后两项应为-号
+            Sta1 = N / (DPs.Phi_y * Sec.Area) - DPs.Belta_my * My*z / (DPs.Gamma_y * Sec.Iyy * Ref_Ny) -
+                DPs.Yita * DPs.Belta_tz * Mz*y / (DPs.Phi_bz * Sec.Izz);
+            Sta2 = N / (DPs.Phi_z * Sec.Area) - DPs.Yita * DPs.Belta_ty * My*z / (DPs.Phi_by * Sec.Iyy)
+                - DPs.Belta_mz * Mz *y/ (DPs.Gamma_z * Sec.Izz * Ref_Nz);
+
+            //取控制值
+            Res = Math.Min(Sta1, Sta2);
+            //如果为拉应力则返回0，如果为压应力反回正的应力值
+            if (Res > 0)
+            {
+                return 0;
+            }
+            else
+            {
+                return Math.Abs(Res);
+            }
+        }
+
+        /// <summary>
+        /// 计算截面所有验算点的控制稳定应力
+        /// </summary>
+        /// <param name="NL">截面内力</param>
+        /// <param name="Sec">截面对像</param>
+        /// <param name="DPs">单元设计参数</param>
+        /// <param name="E">材料弹性模量</param>
+        /// <returns>截面稳定应力值</returns>
+        public static double CalSecMaxStability_YW(SecForce NL, BSections Sec, DesignParameters DPs,double E)
+        {
+            double Res = 0;
+            List<double> slist = new List<double>();
+            Point2dCollection pts;
+            if (Sec is SectionGeneral)
+            {
+                SectionGeneral secg = Sec as SectionGeneral;
+                pts = secg.OPOLY;
+            }
+            else
+            {
+                pts = Sec.CheckPointCollection;
+            }
+            //添加到结果表
+            foreach (Point2d pt in pts)
+            {
+                slist.Add(CodeCheck.CalPointStability(NL, Sec, pt, DPs,E));
+            }
+
+            //求得集合中的最大值
+            foreach (double ss in slist)
+            {
+                Res = Math.Max(Res, ss);
+            }
+            return Res;
         }
 
         /// <summary>
@@ -279,11 +379,13 @@ namespace MidasGenModel.Design
             writer.WriteLine("截面号\t截面名称\t平面内计算长度\t平面外计算长度\t材料设计强度\t净毛面积比\t塑性发展系数γx\t"+
                 "塑性发展系数γy\t等效弯矩系数βmx\t等效弯矩系数βmy\t等效弯矩系数βtx\t等效弯矩系数βty\t"+
                 "受弯稳定系数ψbx\t受弯稳定系数ψby\t平面内长细比\t平面外长细比"+
-                "\t截面类别\t抗震承力调整系数γre");
+                "\t截面类别\t抗震承力调整系数γre\t截面影响系数η");
 
             foreach (BSections sec in mm.sections.Values)
             {
                 List<int> tempElem = mm.getElemBySec(sec.Num);
+                if (tempElem.Count == 0)
+                    continue;
                 int eNum=tempElem[0];
                 double eLeng=mm.getFrameLength(eNum);
                 FrameElement fe = mm.elements[eNum] as FrameElement;
@@ -297,7 +399,8 @@ namespace MidasGenModel.Design
                 writer.Write("\t{0}\t{1}",DP.Belta_ty.ToString("0.00"),DP.Belta_tz.ToString("0.00"));
                 writer.Write("\t{0}\t{1}", DP.Phi_by.ToString("0.00"),DP.Phi_bz.ToString("0.00"));
                 writer.Write("\t{0}\t{1}",DP.Lemda_y.ToString("0.00"),DP.Lemda_z.ToString("0.00") );
-                writer.Write("\t{0}\t{1}","b",DP.Gamma_re.ToString("0.00"));
+                writer.Write("\t{0}\t{1}",DP.SecCat.ToString(),DP.Gamma_re.ToString("0.00"));
+                writer.Write("\t{0}",DP.Yita.ToString("0.00"));
                 writer.Write("\n");
             }
 
@@ -355,6 +458,7 @@ namespace MidasGenModel.Design
                         case "d": cat = SecCategory.d; break;
                         default: cat = SecCategory.b; break;
                     }
+                    double Yita = Convert.ToDouble(curdata[18]);//截面影响系数
 
 
                     //更新长细比
@@ -373,6 +477,7 @@ namespace MidasGenModel.Design
                     fe.DPs.Belta_tz = Betal_tz;
                     fe.DPs.fy = F;//强度设计值
                     fe.DPs.Gamma_re = Gamma_re;
+                    fe.DPs.Yita = Yita;
                 }
             }
 
@@ -390,11 +495,36 @@ namespace MidasGenModel.Design
         {
             FrameElement ele = mm.elements[iElem] as FrameElement;
             int iSec =ele.iPRO;//截面号
+            BSections curSec= mm.sections[iSec];//当前截面
             double i_y = Math.Sqrt(mm.sections[iSec].Iyy / mm.sections[iSec].Area);//回转半径
             double i_z = Math.Sqrt(mm.sections[iSec].Izz / mm.sections[iSec].Area);
 
             ele.DPs.Lemda_y = l_0y / i_y;//计算长细比
             ele.DPs.Lemda_z = l_0z / i_z;//计算长细比
+
+            //形心到剪心的矩离
+            double e0 = Math.Sqrt(Math.Pow(curSec.Sy-curSec.Cy,2)+Math.Pow(curSec.Sz-curSec.Cz,2));
+            double i02 = Math.Pow(e0, 2) + Math.Pow(i_y, 2) + Math.Pow(i_z, 2);
+            double Lemda_z2 = 0;//扭转屈曲的换算长细比
+            //如果截面上下不对称
+            if (Math.Abs(curSec.CzM -curSec.CzP)>0.002)
+            {
+                //扭转屈曲的换算长细比
+                Lemda_z2 = i02 * curSec.Area / (curSec.Ixx / 25.7 + curSec.Iw/Math.Pow(l_0z,2));
+                double temp1 = Math.Pow(ele.DPs.Lemda_z, 2) + Lemda_z2;
+                double temp2 = temp1 + Math.Sqrt(Math.Pow(temp1,2)-4*(1-Math.Pow(e0,2)/i02)*
+                    Math.Pow(ele.DPs.Lemda_z,2)*Lemda_z2);
+                ele.DPs.Lemda_yz = Math.Sqrt(temp2) / Math.Sqrt(2);
+            }
+            else if (Math.Abs(curSec.CyM - curSec.CyP) > 0.002)
+            {
+                //扭转屈曲的换算长细比
+                Lemda_z2 = i02 * curSec.Area / (curSec.Ixx / 25.7 + curSec.Iw / Math.Pow(l_0y, 2));
+                double temp1 = Math.Pow(ele.DPs.Lemda_y, 2) + Lemda_z2;
+                double temp2 = temp1 + Math.Sqrt(Math.Pow(temp1, 2) - 4 * (1 - Math.Pow(e0, 2) / i02) *
+                    Math.Pow(ele.DPs.Lemda_y, 2) * Lemda_z2);
+                ele.DPs.Lemda_yz = Math.Sqrt(temp2) / Math.Sqrt(2);
+            }
 
             double eleLeng = mm.getFrameLength(iElem);//单元长度
             ele.DPs.Lk_y = l_0y/eleLeng;//计算长度系数（单元长度的倍数）
@@ -423,11 +553,28 @@ namespace MidasGenModel.Design
             double phi=1;//稳定系数
             if (iYZ==1)
             {
-                lemda =ele.DPs.Lemda_y;
+                //如果截面左右不对称
+                if (Math.Abs(mm.sections[iSec].CyM - mm.sections[iSec].CyP) > 0.002)
+                {
+                    lemda = ele.DPs.Lemda_yz;
+                }
+                else
+                {
+                    lemda = ele.DPs.Lemda_y;
+                }
+                
             }
             else if (iYZ ==2)
             {
-                lemda = ele.DPs.Lemda_z;
+                //如果截面上下不对称
+                if (Math.Abs(mm.sections[iSec].CzM - mm.sections[iSec].CzP) > 0.002)
+                {
+                    lemda = ele.DPs.Lemda_yz;
+                }
+                else
+                {
+                    lemda = ele.DPs.Lemda_z;
+                }
             }
 
             double lemda_n = lemda * Math.Sqrt(Fy / E) / Math.PI;//正则长细比
@@ -711,6 +858,28 @@ namespace MidasGenModel.Design
         }
 
         #region 方法
+
+        /// <summary>
+        /// 输出截面设置参数所有信息
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            string Res = "";
+            Res += "净毛面积比："+_Ratio_Anet.ToString();
+            Res+="\n截面塑性发展系数(γy,γz)："+_Gamma_y.ToString()+","+_Gamma_z.ToString();
+            Res += "\n等效弯矩系数(βmy,βmz,βty,βtz):" + _Belta_my.ToString()+","+_Belta_mz.ToString()+
+                ","+_Belta_ty.ToString()+","+_Belta_tz.ToString();
+            Res += "\n受弯构件整体稳定性系数(ψby,ψbz)：" + _Phi_by.ToString() + "," + _Phi_bz.ToString();
+            Res += "\n受压构件稳定系数(ψy,ψz):" + _Phi_y.ToString("0.000") + "," + _Phi_z.ToString("0.000");
+            Res+="\n长细比(λy,λz,λyz):"+_lemda_y.ToString("0.000")+","+_lemda_z.ToString("0.000")+","+_lemda_yz.ToString("0.000");
+            Res += "\n截面影响系数:" + _Yita.ToString();
+            Res += "\n承载力抗震调整系数:" + _Gamma_re.ToString();
+            Res += "\n截面类别:" + _SecCat.ToString();
+            Res += "\n抗拉-抗压强度设计值:" + _fy.ToString();
+
+            return Res;
+        }
         #endregion
     }
 
@@ -953,12 +1122,18 @@ namespace MidasGenModel.Design
                     mm.sections[ele.iPRO],
                     ele.DPs)*gamma_re;
                 //计算稳定性强度
-                double Stability_i = CodeCheck.CalStability_YW(EFcom.Force_i, mm.sections[ele.iPRO],
-                    ele.DPs, mm.mats[ele.iMAT].Elast)*gamma_re;
-                double Stability_2 =CodeCheck. CalStability_YW(EFcom.Force_48, mm.sections[ele.iPRO],
-                    ele.DPs, mm.mats[ele.iMAT].Elast)*gamma_re;
-                double Stability_j =CodeCheck. CalStability_YW(EFcom.Force_j, mm.sections[ele.iPRO],
-                    ele.DPs, mm.mats[ele.iMAT].Elast)*gamma_re;
+                //double Stability_i = CodeCheck.CalStability_YW(EFcom.Force_i, mm.sections[ele.iPRO],
+                //    ele.DPs, mm.mats[ele.iMAT].Elast)*gamma_re;
+                //double Stability_2 =CodeCheck. CalStability_YW(EFcom.Force_48, mm.sections[ele.iPRO],
+                //    ele.DPs, mm.mats[ele.iMAT].Elast)*gamma_re;
+                //double Stability_j =CodeCheck. CalStability_YW(EFcom.Force_j, mm.sections[ele.iPRO],
+                //    ele.DPs, mm.mats[ele.iMAT].Elast)*gamma_re;
+                double Stability_i = CodeCheck.CalSecMaxStability_YW(EFcom.Force_i, mm.sections[ele.iPRO],
+                    ele.DPs, mm.mats[ele.iMAT].Elast) * gamma_re;
+                double Stability_2 = CodeCheck.CalSecMaxStability_YW(EFcom.Force_48, mm.sections[ele.iPRO],
+                    ele.DPs, mm.mats[ele.iMAT].Elast) * gamma_re;
+                double Stability_j = CodeCheck.CalSecMaxStability_YW(EFcom.Force_j, mm.sections[ele.iPRO],
+                    ele.DPs, mm.mats[ele.iMAT].Elast) * gamma_re;
 
                 double Ratio = Math.Max( Strength_i,Stability_i) / ele.DPs.fy;
                 double Ratio_2 = Math.Max(Strength_2,Stability_2)/ ele.DPs.fy;

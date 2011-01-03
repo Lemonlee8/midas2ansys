@@ -1,10 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Collections;
-using System.Text;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Windows.Forms;
 using MidasGenModel.Design;
+using MidasGenModel.Geometry3d;
 
 
 namespace MidasGenModel.model
@@ -547,6 +548,7 @@ namespace MidasGenModel.model
     {
         private int node;//节点号
         private double fx, fy, fz, mx, my, mz;
+        #region 属性
         /// <summary>
         /// 节点号
         /// </summary>
@@ -633,7 +635,9 @@ namespace MidasGenModel.model
                 //throw new Exception("The method or operation is not implemented.");
             }
         }
+        #endregion
 
+        #region 构造函数
         /// <summary>
         /// 构造函数：初始荷载值全为0
         /// </summary>
@@ -650,16 +654,23 @@ namespace MidasGenModel.model
             group = null;
             lc = null;
         }
+        #endregion
 
+        #region 方法
         /// <summary>
-        /// 批量修改节点荷载数据
+        /// 对节点荷载进行比例放大
         /// </summary>
-        /// <param name="data">节点数据数组：daouble[]{FX,FY,FZ,
-        /// MX,MY,MZ}</param>
-        public void putdata(double[] data)
+        /// <param name="factor">系数</param>
+        public void Magnify(double factor)
         {
-            //to do:....
+            fx = fx * factor;
+            fy = fy * factor;
+            fz = fz * factor;
+            mx = mx * factor;
+            my = my * factor;
+            mz = mz * factor;
         }
+        #endregion
     }
 
     /// <summary>
@@ -795,13 +806,37 @@ namespace MidasGenModel.model
     }
 
     /// <summary>
+    /// 梁单元荷载类型
+    /// </summary>
+    public enum BeamLoadType
+    {
+        /// <summary>
+        /// Uniform Loads 均布荷载
+        /// </summary>
+        UNILOAD,
+        /// <summary>
+        /// Concentrated Forces 集中力
+        /// </summary>
+        CONLOAD,
+        /// <summary>
+        /// Concentrated Moments 集中弯矩
+        /// </summary>
+        CONMOMENT,
+        /// <summary>
+        /// Uniform Moments/Torsions 均布弯矩或扭矩
+        /// </summary>
+        UNIMOMENT
+    }
+
+    /// <summary>
     /// 梁单元荷载类
     /// </summary>
     [Serializable]
     public class BBLoad : Load
     {
         private int elem_num;//单元号
-        private string cmd, type;
+        private string cmd;
+        private BeamLoadType _type;
         private DIR dir;//加载方向
         private bool bproj;//是否投影
 
@@ -833,10 +868,10 @@ namespace MidasGenModel.model
         /// <summary>
         /// 梁单元荷载类型
         /// </summary>
-        public string TYPE
+        public BeamLoadType TYPE
         {
-            get { return type; }
-            set { type = value; }
+            get { return _type; }
+            set { _type = value; }
         }
 
         /// <summary>
@@ -914,7 +949,7 @@ namespace MidasGenModel.model
             beccen = false;//不偏心
             bproj = false;//不投影
             cmd = "BEAM";
-            type = "UNILOAD";
+            _type = BeamLoadType.UNILOAD;
             beccen = false;
             dir = DIR.GX;
             bj_end = false;
@@ -1141,6 +1176,176 @@ namespace MidasGenModel.model
             return res;
         }
     }
+
+    /// <summary>
+    /// 单元温度荷载类
+    /// </summary>
+    [Serializable]
+    public class BETLoad : Load
+    {
+        private int _elem_num;//单元号
+        private double _Temp;//单元温度
+
+        #region 属性
+        /// <summary>
+        /// 单元号
+        /// </summary>
+        public int Elem_Num
+        {
+            get { return _elem_num;}
+            set { _elem_num = value; }
+        }
+
+        /// <summary>
+        /// 温度荷载
+        /// </summary>
+        public double Temp
+        {
+            get { return _Temp; }
+            set { _Temp = value; }
+        }
+        /// <summary>
+        /// 荷载分组
+        /// </summary>
+        public override string Group
+        {
+            get
+            {
+                return group;
+            }
+            set
+            {
+                group = value;
+            }
+        }
+        /// <summary>
+        /// 荷载工况
+        /// </summary>
+        public override string LC
+        {
+            get
+            {
+                return lc;
+            }
+            set
+            {
+                lc = value;
+            }
+        }
+        #endregion
+
+        #region 构造函数
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public BETLoad()
+        {
+            _elem_num = 0;
+            _Temp = 0;
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// 节点荷载表类
+    /// </summary>
+    [Serializable]
+    public class BLoadTable
+    {
+        #region 数据成员
+        private Hashtable _NLoadData;//节点荷载数据
+        private Hashtable _BeamLoadData;//单元荷载数据
+        #endregion
+
+        #region 属性
+        /// <summary>
+        /// 节点荷载数据
+        /// </summary>
+        public Hashtable NLoadData
+        {
+            get { return _NLoadData; }
+        }
+
+        /// <summary>
+        /// 具有节点荷载的节点号列表
+        /// </summary>
+        public List<int> NodeListForNLoad
+        {
+            get
+            {
+                List<int> Res = new List<int>();
+                foreach (DictionaryEntry de in _NLoadData)
+                {
+                    SortedList<int, BNLoad> ND = de.Value as SortedList<int, BNLoad>;
+                    foreach (KeyValuePair<int, BNLoad> kvp in ND)
+                    {
+                        if (Res.Contains(kvp.Key)==false)
+                            Res.Add(kvp.Key);
+                    }
+                }
+
+                return Res;
+            }
+        }
+        #endregion
+
+        #region 构造函数
+        /// <summary>
+        /// 构造函数初始化
+        /// </summary>
+        public BLoadTable()
+        {
+            _NLoadData = new Hashtable();
+            _BeamLoadData = new Hashtable();
+        }
+        #endregion
+        #region 方法
+        /// <summary>
+        /// 按旧数据更新荷载表中的节点荷载
+        /// </summary>
+        /// <param name="LCs">工况列表</param>
+        /// <param name="NLoadData">旧版节点荷载数据</param>
+        public void  UpdateNodeLoadList(List<BLoadCase> LCs,SortedList<int,BNLoad> NLoadData)
+        {
+            foreach (BLoadCase lc in LCs)
+            {
+                //当前组合的节点荷载表
+                SortedList<int, BNLoad> CurNLoadData = new SortedList<int,BNLoad> ();
+
+                foreach (KeyValuePair<int, BNLoad> NLoad in NLoadData)
+                {
+                    if (NLoad.Value.LC == lc.LCName)
+                    {
+                        CurNLoadData.Add(NLoad.Key, NLoad.Value);
+                    }
+                }
+                //添加当前组合节点表入总表
+                if (CurNLoadData.Count>0)
+                    _NLoadData.Add(lc.LCName, CurNLoadData);                
+            }
+        }
+
+        /// <summary>
+        /// 按比例系数修改节点荷载
+        /// </summary>
+        /// <param name="node">节点号</param>
+        /// <param name="LC_Name">工况名</param>
+        /// <param name="factor">比例系数</param>
+        public void ModifyNodeLoad(int node, string LC_Name, double factor)
+        {
+            //如果没有此工况请返回
+            if (_NLoadData.ContainsKey(LC_Name) == false)
+                return;
+            SortedList<int, BNLoad> NLoadData = _NLoadData[LC_Name] as SortedList<int, BNLoad>;
+            if (NLoadData.ContainsKey(node) == false)
+                return;
+            else
+            {
+                NLoadData[node].Magnify(factor);
+            }
+        }
+        #endregion
+    }
     #endregion
 
     #region Geometry Model Class(几何模型类)
@@ -1166,6 +1371,18 @@ namespace MidasGenModel.model
         /// 节点Z坐标
         /// </summary>
         public double Z;
+
+        /// <summary>
+        /// 节点坐标位置
+        /// </summary>
+        public Point3d Location
+        {
+            get
+            {
+                Point3d res = new Point3d(X, Y, Z);
+                return res;
+            }
+        }
         /// <summary>
         /// 默认构造函数
         /// </summary>
@@ -1192,6 +1409,7 @@ namespace MidasGenModel.model
             Z = nz;
         }
 
+        #region 方法函数
         //重载ToString函数
         new public string ToString()
         {
@@ -1205,11 +1423,27 @@ namespace MidasGenModel.model
         /// <returns>返回距离值</returns>
         public double DistanceTo(Bnodes nodeNext)
         {
-            double res=Math.Sqrt(Math.Pow((nodeNext.X-this.X),2)+
-                Math.Pow((nodeNext.Y-this.Y),2)+
-                Math.Pow((nodeNext.Z-this.Z),2));
+            double res = Math.Sqrt(Math.Pow((nodeNext.X - this.X), 2) +
+                Math.Pow((nodeNext.Y - this.Y), 2) +
+                Math.Pow((nodeNext.Z - this.Z), 2));
             return res;
         }
+
+        /// <summary>
+        /// 求到另一节点的方向向量
+        /// </summary>
+        /// <param name="nodeto">到的节点</param>
+        /// <returns>单位方向向量</returns>
+        public Vector3 VectorTo(Bnodes nodeto)
+        {
+            Vector3 v1 = new Vector3(this.X, this.Y, this.Z);
+            Vector3 v2 = new Vector3(nodeto.X, nodeto.Y, nodeto.Z);
+            Vector3 Res = v2 - v1;//矢量相减即得方向向量
+            Res.Normalize();//归一化
+            return Res;
+        }
+        #endregion
+        
     }
 
     /// <summary>
@@ -1220,6 +1454,12 @@ namespace MidasGenModel.model
     {
         private int _iEL, _iMAT, _iPRO;
         private ElemType _TYPE;
+        private CoordinateSystem _ECS;//单元坐标系
+        /// <summary>
+        /// 单元节点号数组
+        /// </summary>
+        public List<int> iNs;
+        #region 属性
         /// <summary>
         /// 单元编号
         /// </summary>
@@ -1253,10 +1493,23 @@ namespace MidasGenModel.model
             set { _iPRO = value; }
         }
         /// <summary>
-        /// 单元节点号数组
+        /// 单元局部坐标系
         /// </summary>
-        public List<int> iNs;
+        public CoordinateSystem ECS
+        {
+            get { return _ECS; }
+            set { _ECS = value; }
+        }
 
+        /// <summary>
+        /// 节点数
+        /// </summary>
+        public int NodeCount
+        {
+            get { return iNs.Count; }
+        }
+        #endregion
+        
         /// <summary>
         ///构造函数 
         /// </summary>
@@ -1267,6 +1520,7 @@ namespace MidasGenModel.model
             iMAT = 0;
             iPRO = 0;
             iNs = new List<int>();
+            _ECS = new CoordinateSystem();
         }
         /// <summary>
         /// 构造函数重载
@@ -1292,6 +1546,7 @@ namespace MidasGenModel.model
                     iNs.Add(node);
                 }
             }
+            _ECS = new CoordinateSystem();
         }
         //方法
 
@@ -1317,7 +1572,12 @@ namespace MidasGenModel.model
         private int _iSUB;
         private double _EXVAL;
         private DesignParameters _DPs;
+        /// <summary>
+        /// 其它参数3
+        /// </summary>
+        public int iOPT;
 
+        #region 属性
         /// <summary>
         /// 钢结构梁单元的设计参数
         /// </summary>
@@ -1358,11 +1618,31 @@ namespace MidasGenModel.model
             set { _EXVAL = value; }
             get { return _EXVAL; }
         }
-        /// <summary>
-        /// 其它参数3
-        /// </summary>
-        public int iOPT;
 
+        /// <summary>
+        /// 单元节点号i
+        /// </summary>
+        public int I
+        {
+            get 
+            {
+                return iNs[0]; 
+            }
+        }
+
+        /// <summary>
+        /// 单元节点号j
+        /// </summary>
+        public int J
+        {
+            get
+            {
+                return iNs[1];
+            }
+        }
+        #endregion
+
+        #region 构造函数
         /// <summary>
         /// 不带参数的构造函数,beta=0;type="BEAM"
         /// </summary>
@@ -1387,6 +1667,7 @@ namespace MidasGenModel.model
             //调用基类的构造函数
             this._DPs = new DesignParameters();
         }
+        #endregion
 
         #region 单元方法
         #endregion
@@ -1512,6 +1793,16 @@ namespace MidasGenModel.model
             set { _Izz = value; }
         }
 
+        private double _Iw;
+        /// <summary>
+        /// 毛截面扇性惯性矩
+        /// </summary>
+        public double Iw
+        {
+            get { return _Iw; }
+            set { _Iw = value; }
+        }
+
         protected double _CyP;//自中和轴到单元坐标系(+)y方向最外端的距离
         /// <summary>
         /// 自中和轴到单元坐标系(+)y方向最外端的距离
@@ -1552,8 +1843,42 @@ namespace MidasGenModel.model
         protected double _QzB;//作用于单元坐标系z轴方向的剪切系数
         protected double _PERI_OUT;//截面外轮廓周长
         protected double _PERI_IN;//截面内轮廓周长
-        protected double _Cy;//截面形心y坐标
-        protected double _Cz;//截面形心z坐标
+        private double _Cy;//截面形心y坐标
+        /// <summary>
+        /// 截面形心y坐标
+        /// </summary>
+        public double Cy
+        {
+            get { return _Cy; }
+            set { _Cy = value; }
+        }
+        private double _Cz;//截面形心z坐标
+        /// <summary>
+        /// 截面形心z坐标
+        /// </summary>
+        public  double Cz
+        {
+            get { return _Cz; }
+            set { _Cz = value; }
+        }
+        private double _Sy;//截面剪心y坐标
+        /// <summary>
+        /// 截面剪心y坐标
+        /// </summary>
+        public double Sy
+        {
+            get { return _Sy; }
+            set { _Sy = value; }
+        }
+        private double _Sz;//截面剪心z坐标
+        /// <summary>
+        /// 截面剪心z坐标
+        /// </summary>
+        public double Sz
+        {
+            get { return _Sz; }
+            set { _Sz = value; }
+        }
 
         protected double _y1;//四个角点坐标
         //四个角点坐标
@@ -1634,6 +1959,23 @@ namespace MidasGenModel.model
         public double Area
         {
             get { return _Area; }
+            set { _Area = value; }
+        }
+
+        /// <summary>
+        /// 截面验算点集合（目前内有4个点集）
+        /// </summary>
+        public Point2dCollection CheckPointCollection
+        {
+            get
+            {
+                Point2dCollection ptc = new Point2dCollection();
+                ptc.addPt(new Point2d(_y1, _z1));
+                ptc.addPt(new Point2d(_y2, _z2));
+                ptc.addPt(new Point2d(_y3, _z3));
+                ptc.addPt(new Point2d(_y4, _z4));
+                return ptc;
+            }
         }
 
         /// <summary>
@@ -1830,8 +2172,8 @@ namespace MidasGenModel.model
                 this._Ixx = 2 * Math.Pow((D_b-D_tw) * (D_h-D_tf), 2) / ((D_b-D_tw) / D_tf + (D_h-D_tf) / D_tw);//抗扭刚度
                 this._Iyy = D_b * Math.Pow(D_h, 3) / 12 - (D_b - 2 * D_tw) * Math.Pow(D_h - 2 * D_tf, 3) / 12;//抗弯刚度
                 this._Izz = D_h * Math.Pow(D_b, 3) / 12 - (D_h - 2 * D_tf) * Math.Pow(D_b - 2 * D_tw, 3) / 12;//抗弯刚度
-                this._Cy = D_b / 2;
-                this._Cz = D_h / 2;
+                this.Cy = D_b / 2;
+                this.Cz = D_h / 2;
                 this._y1 = -D_b / 2;
                 this._z1 = D_h / 2;
                 this._y2 = D_b / 2;
@@ -1854,8 +2196,8 @@ namespace MidasGenModel.model
                 this._Ixx = (h*Math.Pow(tw,3)+2*b*Math.Pow(tf,3))/3;//抗扭刚度
                 this._Iyy = b * Math.Pow(h, 3) / 12 - (b - tw) * Math.Pow(h - 2 * tf, 3) / 12;//抗弯刚度
                 this._Izz = 2*tf * Math.Pow(b, 3) / 12 +(h-2*tf)*Math.Pow(tw,3)/12;//抗弯刚度
-                this._Cy = b / 2;
-                this._Cz = h / 2;
+                this.Cy = b / 2;
+                this.Cz = h / 2;
                 this._y1 = -b / 2;
                 this._z1 = h / 2;
                 this._y2 = b / 2;
@@ -1877,8 +2219,8 @@ namespace MidasGenModel.model
                 this._Ixx = Math.PI*(Math.Pow(ro,4)-Math.Pow(ri,4))/2;//抗扭刚度
                 this._Iyy = Math.PI * Math.Pow(2 * ro, 4) / 64 - Math.PI * Math.Pow(2 * ri, 4) / 64;//抗弯刚度
                 this._Izz = Math.PI * Math.Pow(2 * ro, 4) / 64 - Math.PI * Math.Pow(2 * ri, 4) / 64;//抗弯刚度
-                this._Cy = ro;
-                this._Cz = ro;
+                this.Cy = ro;
+                this.Cz = ro;
                 this._y1 = 0;
                 this._z1 =ro;
                 this._y2 = ro;
@@ -1898,8 +2240,8 @@ namespace MidasGenModel.model
                 this._Ixx =0;//抗扭刚度
                 this._Iyy = D_b * Math.Pow(D_h, 3) / 12 ;//抗弯刚度
                 this._Izz = D_h * Math.Pow(D_b, 3) / 12 ;//抗弯刚度
-                this._Cy = D_b / 2;
-                this._Cz = D_h / 2;
+                this.Cy = D_b / 2;
+                this.Cz = D_h / 2;
                 this._y1 = -D_b / 2;
                 this._z1 = D_h / 2;
                 this._y2 = D_b / 2;
@@ -2049,9 +2391,70 @@ namespace MidasGenModel.model
         /// <returns>APDL命令：截面类型 SectionGeneral</returns>
         public override string WriteData()
         {
-            //throw new NotImplementedException();
             string res = null;
-            res = "!此截面为SPC自定义截面！！！";
+            res = "!此截面为SPC自定义截面";
+            res += "\nsectype," + this.Num.ToString() + ",beam,mesh," + this.Name;
+            res += "\nsecread,"+this.Name+",sect,,mesh";
+            return res;
+        }
+        /// <summary>
+        /// 生成自定义SPC截面的ansys宏文件
+        /// </summary>
+        /// <returns>宏命令流</returns>
+        public string GetSectMac()
+        {
+            string res = null;
+            res = "!"+this.Name+"截面为SPC自定义截面，用宏文件进行生成";
+            res += "\n*create," + this.Name + ",sec";
+            res += "\nfinish\n/clear\n/prep7";//清理模型
+            res += "\n*get,kpmax,kp,0,num,maxd";//最大关键点号
+            int i = 0;//编号
+            //创建平面点
+            foreach (Point2d pt in _OPOLY)
+            {
+                i++;
+                res += "\nk," + "kpmax+" + i.ToString() + "," + pt.X.ToString() + "," + pt.Y.ToString();
+            }
+            //连接平面点为线
+            for (int j = 0; j < _OPOLY.Length - 1; j++)
+            {
+                res += "\nl," + "kpmax+" + (j + 1).ToString() + "," + "kpmax+" + (j + 2).ToString();
+            }
+            res += "\nl," + "kpmax+" + i.ToString() + ",kpmax+1";//封闭曲线
+
+            if (_IPOLYs.Count > 0)
+            {
+                foreach (Point2dCollection ptc in _IPOLYs)
+                {
+                    res += "\n!内轮廓";
+                    res += "\n*get,kpmax,kp,0,num,maxd";//最大关键点号
+                    i = 0;//归零
+                    //创建平面点
+                    foreach (Point2d pt in ptc)
+                    {
+                        i++;
+                        res += "\nk," + "kpmax+" + i.ToString() + "," + pt.X.ToString() + "," + pt.Y.ToString();
+                    }
+                    //连接平面点为线
+                    for (int j = 0; j < ptc.Length - 1; j++)
+                    {
+                        res += "\nl," + "kpmax+" + (j + 1).ToString() + "," + "kpmax+" + (j + 2).ToString();
+                    }
+                    res += "\nl," + "kpmax+" + i.ToString() + ",kpmax+1";//封闭曲线
+                }
+            }
+            res += "\nlsel,all";
+            res += "\nal,all\t!形成面";
+            res += "\net,100,82";
+            res += "\naatt,,,100";
+            //设置网格划分尺寸
+            //double ele = _OPOLY[0].DistantTo(_OPOLY[1])/2;//前两点距离的一半
+            double ele = _CyM / 5;
+            res += "\naesize,all,"+ele.ToString();
+            res += "\namesh,all";
+            res += "\nsecwrite," + this.Name + ",sect,,100" + "\t!输出截面文件";
+            res += "\nkpmax=";
+            res += "\n*end";
             return res;
         }
         /// <summary>
@@ -3013,6 +3416,106 @@ namespace MidasGenModel.model
     }
     #endregion
 
+    #region 其它数据结构
+    /// <summary>
+    /// 结构组数据类[2010.8.10]
+    /// </summary>
+    [Serializable]
+    public class BSGroup
+    {
+        #region 成员
+        private string _GroupName;//组名称
+        private List<int> _NodeList;//节点列表
+        private List<int> _EleList;//单元列表
+        #endregion
+
+        #region 属性
+        /// <summary>
+        /// 组名称
+        /// </summary>
+        public string GroupName
+        {
+            get { return _GroupName; }
+            set { _GroupName = value; }
+        }
+        /// <summary>
+        /// 节点列表
+        /// </summary>
+        public List<int> NodeList
+        {
+            get { return _NodeList; }
+        }
+        /// <summary>
+        /// 单元列表
+        /// </summary>
+        public List<int> EleList
+        {
+            get { return _EleList; }
+        }
+        #endregion
+        #region 构造函数
+        /// <summary>
+        /// 无参数初始化
+        /// </summary>
+        public BSGroup()
+        {
+            _GroupName = null;
+            _NodeList = new List<int>();
+            _EleList = new List<int>();
+        }
+        /// <summary>
+        /// 指定组名初始化
+        /// </summary>
+        /// <param name="Name">组名称</param>
+        public BSGroup(string Name)
+        {
+            _GroupName = Name;
+            _NodeList = new List<int>();
+            _EleList = new List<int>();
+        }
+        #endregion
+        #region 方法
+        /// <summary>
+        /// 添加节点列表入组
+        /// </summary>
+        /// <param name="NewList">节点列表</param>
+        public void AddNodeList(List<int> NewList)
+        {
+            foreach (int NewNode in NewList)
+            {
+                if (_NodeList.Contains(NewNode))
+                    continue;
+                else
+                {
+                    _NodeList.Add(NewNode);
+                }
+            }
+
+            _NodeList.Sort();//排序
+        }
+
+        /// <summary>
+        /// 添加单元列表入组
+        /// </summary>
+        /// <param name="NewList">单元列表</param>
+        public void AddElemList(List<int> NewList)
+        {
+            foreach (int NewElem in NewList)
+            {
+                if (_EleList.Contains(NewElem))
+                    continue;
+                else
+                {
+                    _EleList.Add(NewElem);
+                }
+            }
+
+            _EleList.Sort();//排序
+        }
+        #endregion
+    }
+    #endregion
+
     /// <summary>
     /// 模型类：封装所有数据信息
     /// </summary>
@@ -3054,9 +3557,10 @@ namespace MidasGenModel.model
         /// <summary>
         /// 荷载组合列表
         /// </summary>
-        //public SortedList<string, BLoadComb> LOADCOMBS;
          private BLoadCombTable _LoadCombTable;
 
+        //荷载表
+         private BLoadTable _LoadTable;
         /// <summary>
         /// 节点荷载链表
         /// </summary>
@@ -3066,6 +3570,11 @@ namespace MidasGenModel.model
         /// 梁单元荷载链表
         /// </summary>
         public SortedList<int, BBLoad> beamloads;
+
+        /// <summary>
+        /// 单元温度荷载
+        /// </summary>
+        private SortedList<int, BETLoad> _EleTempLoads;
 
         /// <summary>
         /// 自重荷载信息链表
@@ -3081,6 +3590,8 @@ namespace MidasGenModel.model
         /// 单元内力链表
         /// </summary>
         public SortedList<int, BElemForceTable> elemforce;
+
+        private SortedList<string, BSGroup> _StruGroups;//结构组链表
         #endregion
 
         #region 属性
@@ -3091,7 +3602,23 @@ namespace MidasGenModel.model
         {
             get { return _LoadCombTable; }
         }
+        /// <summary>
+        /// 荷载表字典
+        /// </summary>
+        public BLoadTable LoadTable
+        {
+            get { return _LoadTable; }
+        }
+        /// <summary>
+        /// 组构组链表
+        /// </summary>
+        public SortedList<string, BSGroup> StruGroups
+        {
+            get { return _StruGroups; }
+        }
         #endregion
+
+        #region 构造函数
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -3108,13 +3635,19 @@ namespace MidasGenModel.model
 
             STLDCASE = new List<BLoadCase>();
             _LoadCombTable = new BLoadCombTable();//荷载组合表
+            _LoadTable = new BLoadTable();//所有荷载表
             conloads = new SortedList<int, BNLoad>(new RepeatedKeySort());//节点荷载
             beamloads = new SortedList<int, BBLoad>(new RepeatedKeySort());//梁单元荷载
+            _EleTempLoads = new SortedList<int, BETLoad>(new RepeatedKeySort());//单元温度荷载
             selfweight = new SortedList<string, BWeight>();//自重信息
             mats = new SortedList<int, BMaterial>();//材料信息
 
             elemforce = new SortedList<int, BElemForceTable>();//单元内力表
+
+            _StruGroups = new SortedList<string, BSGroup>();//结构组表
         }
+        #endregion
+
         #region 模型处理方法
         /// <summary>
         /// 转化梁单元关键点信息
@@ -3182,7 +3715,7 @@ namespace MidasGenModel.model
             Vector3 vr = vf.CrossProduct(new Vector3(1, 0, 0));
             Vector3 vup = vf.CrossProduct(vr);
 
-            RtwMatrix m = new RtwMatrix(3, 3);//
+            RtwMatrix m = new RtwMatrix(3, 3);
             m[0, 0] = (float)vr.X;
             m[1, 0] = (float)vr.Y;
             m[2, 0] = (float)vr.Z;
@@ -3226,6 +3759,53 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
+        /// 刷新单元局部坐标系
+        /// 2010.05.25
+        /// </summary>
+        public void RefreshESC()
+        {
+            foreach (Element elee in this.elements.Values)
+            {
+                if (elee is FrameElement)//梁单元
+                {
+                    CoordinateSystem cs = new CoordinateSystem();
+                    FrameElement ele = elee as FrameElement;
+                    int iNum=ele.iNs[0];
+                    int jNum=ele.iNs[1];
+
+                    Point3d pti = new Point3d(nodes[iNum].X, nodes[iNum].Y, nodes[iNum].Z);
+                    Point3d ptj = new Point3d(nodes[jNum].X, nodes[jNum].Y, nodes[jNum].Z);
+                    Vector3 Vecx = pti.GetVectorTo(ptj);
+                    Vecx.Normalize();//归一化
+                    Vector3 Vz = new Vector3();//方向向量
+                    if (Vecx.X == 0 && Vecx.Y == 0)
+                    {
+                        Vz = Vector3.xAxis;
+                    }
+                    else
+                    {
+                        Vz = Vector3.zAxis;
+                    }
+
+                    //方向向量按β角旋转
+                    RtwMatrix Mz = MatrixFactory.GetRotationMartrix(Vecx, ele.beta) * Vz.ToMatrix();
+                    Vz = new Vector3(Mz[0, 0], Mz[1, 0], Mz[2, 0]);//更新旋转后的结果
+                    Vector3 Vy = Vz.CrossProduct(Vecx);
+                    Vy.Normalize();//归一化
+
+                    cs.Origin = pti;
+                    cs.AxisX = Vecx;
+                    cs.AxisY = Vy;
+                    ele.ECS = cs;//更新单元坐标系
+                }
+                else if (elee is PlanarElement)//平面单元
+                {
+                    //to do:
+                }
+            }
+        }
+
+        /// <summary>
         ///对模型数据进行标准化处理
         /// </summary>
         public void Normalize()
@@ -3241,6 +3821,13 @@ namespace MidasGenModel.model
                     {
                         sec.SEC_Data[6] = sec.SEC_Data[4];
                     }
+                    //解决槽钢截面当用户没有输入tf2时对截面数据进行标准化
+                    else if (sec.SSHAPE == SecShape.C && (double)sec.SEC_Data[5] == 0
+                        && (double)sec.SEC_Data[2] != 0)
+                    {
+                        sec.SEC_Data[5] = sec.SEC_Data[2];
+                        sec.SEC_Data[6] = sec.SEC_Data[4];
+                    }
                 }
                 sec.CalculateSecProp();//计算截面特性
                 //todo:当输入截面为数据库截面时，进行截面参数转化
@@ -3251,6 +3838,12 @@ namespace MidasGenModel.model
             {
                 mat.NormalizeProp();
             }
+
+            //更新单元局部坐标系
+            RefreshESC();
+
+            //更新最新的荷载表数据
+            _LoadTable.UpdateNodeLoadList(this.STLDCASE, this.conloads);
         }
 
         /// <summary>
@@ -3367,6 +3960,22 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
+        /// 取得线单元的方向向量（单位向量）：由I到J
+        /// </summary>
+        /// <param name="iEle">单元号</param>
+        /// <returns>单位方向向量</returns>
+        public Vector3 getFrameVec(int iEle)
+        {
+            Vector3 Res = new Vector3();
+            if (this.elements[iEle] is FrameElement)
+            {
+                FrameElement fme = this.elements[iEle] as FrameElement;
+                Res = this.nodes[fme.I].VectorTo(this.nodes[fme.J]);
+            }
+            return Res;
+        }
+
+        /// <summary>
         /// 由截面号返回单元号列表
         /// </summary>
         /// <param name="iSec">截面号</param>
@@ -3423,6 +4032,7 @@ namespace MidasGenModel.model
             }
         }
         #endregion
+
         #region model类输入输出接口方法
         /// <summary>
         /// 读取mgt文件信息
@@ -3994,7 +4604,7 @@ namespace MidasGenModel.model
                         BBLoad BeamLoadData = new BBLoad();
                         BeamLoadData.ELEM_num = int.Parse(temp1[0].Trim());
                         BeamLoadData.CMD = temp1[1].Trim();
-                        BeamLoadData.TYPE = temp1[2].Trim();
+                        BeamLoadData.TYPE = (BeamLoadType)Enum.Parse(typeof(BeamLoadType), temp1[2].Trim());//荷载类型
                         BeamLoadData.setLoadDir(temp1[3].Trim());
                         if (temp1[4].Trim() == "YES")
                             BeamLoadData.bPROJ = true;
@@ -4026,12 +4636,46 @@ namespace MidasGenModel.model
                     }
                 }
                 #endregion
+
+                #region 温度荷载读取
+                else if (line.StartsWith(" ") == true && currentdata == "*ELTEMPER")
+                {
+                    //拆分字符
+                    temp = curLoadCase.Split(new char[] { ',', ' ' },
+                        StringSplitOptions.RemoveEmptyEntries);//temp[1]为工况名
+                    temp1 = line.Split(new char[] { ',' },
+                        StringSplitOptions.RemoveEmptyEntries);//temp1为数据组
+                    try
+                    {
+                        BETLoad TempLoad = new BETLoad();
+                        TempLoad.Elem_Num = Convert.ToInt32( temp1[0].Trim());//单元号
+                        TempLoad.Temp = Convert.ToDouble(temp1[1].Trim());//单元温度
+                        TempLoad.LC = temp[1];//工况
+                        if (temp1[2] != " ")
+                        {
+                             TempLoad.Group = temp1[2].Trim();//装入组名
+                        }
+                        _EleTempLoads.Add(TempLoad.Elem_Num, TempLoad);//加入模型数据库
+                    }
+                    catch
+                    {
+                        MessageBox.Show("解析单元温度荷载表出错！\n", "错误信息", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                #endregion
             }
             reader.Close();
-            #region 再次打开文件并读取
+            #region 再次打开文件并读取荷载组合
             FileStream str = File.Open(FilePath, FileMode.Open, FileAccess.Read);
             StreamReader sr = new StreamReader(str,Encoding.Default);//用系统默认编码打开
             ReadLoadComb(ref sr);   //读取荷载组合
+            sr.Close();
+            #endregion
+
+            #region 再次打开文件并读取结构组
+            str = File.Open(FilePath, FileMode.Open, FileAccess.Read);
+            sr = new StreamReader(str, Encoding.Default);//用系统默认编码打开
+            ReadStruGroups(ref sr); //读取结构组
             sr.Close();
             #endregion
 
@@ -4136,6 +4780,167 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
+        /// 读取结构组数据表
+        /// </summary>
+        /// <param name="str">文件流</param>
+        public void ReadStruGroups(ref StreamReader srt)
+        {
+            /* 1、准备*/
+            bool bRead = false;                     //是否可以读取
+            String strText = null;                  //当前行文本
+            String strStartFlag = "*GROUP";      //数据开始标志
+            String strEndFlag = "";                 //数据结束标志
+            char szSplit = ',';                     //数据分隔符
+            int iGroupFlag = 0;                  //组数据标志：0-新组,1-节点数据,2-单元数据
+
+            /* 2、循环读取*/
+            BSGroup Group = null;                   //组
+            for (strText = srt.ReadLine(); strText != null; strText = srt.ReadLine())
+            {
+                /* 2.1、判断是否读到数据。若读到，设置标志，进入下一轮循环开始读取；若没有读到，继续进入下一轮判断。*/
+                /* 2.2、bRead=true，表示已经可以读数据了。读的时候要判断是否已经读完数据。*/
+                if (!bRead)
+                {
+                    if (strText.StartsWith(strStartFlag))
+                    {
+                        bRead = true;
+                    }
+                    continue;
+                }
+                else if (strText.StartsWith(";"))//如果为注释则忽略
+                    continue;
+                else if (strText.CompareTo(strEndFlag) == 0)//如果读取数据结尾则返回
+                    return;
+                else
+                {
+                    #region 读取数据
+                    string[] sCurs = strText.Trim().Split(szSplit);
+                    if (sCurs.Length == 3 && iGroupFlag == 0)//第一行有两个分隔符时
+                    {
+                        Group = new BSGroup(sCurs[0].Trim());//创建新组
+                        List<int> nodes = Tools.SelectCollection.StringToList(sCurs[1].Trim());
+                        List<int> elems = new List<int>();
+                        if (sCurs[2].EndsWith("\\"))
+                        {
+                            iGroupFlag = 2;      //指定下一行为旧数据
+                            elems = Tools.SelectCollection.StringToList(sCurs[2].TrimEnd('\\'));
+                        }
+                        else
+                        {
+                            iGroupFlag = 0;     //指定下一行为新组
+                            elems = Tools.SelectCollection.StringToList(sCurs[2]);
+                        }
+                        Group.AddNodeList(nodes);//添加节点表
+                        Group.AddElemList(elems);//添加单元表
+
+                        //添加入模型数据库
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            this.StruGroups.Add(Group.GroupName, Group);
+                        }
+                    }
+                    else if (sCurs.Length == 2 && iGroupFlag == 0)//第一行有一个分隔符时
+                    {
+                        Group = new BSGroup(sCurs[0].Trim());//创建新组
+                        List<int> nodes = new List<int>();
+                        if (sCurs[1].EndsWith("\\"))
+                        {
+                            iGroupFlag = 1;      //指定下一行为旧数据
+                            nodes = Tools.SelectCollection.StringToList(sCurs[1].TrimEnd('\\'));
+                        }
+                        else
+                        {
+                            iGroupFlag = 0;     //指定下一行为新组
+                            nodes = Tools.SelectCollection.StringToList(sCurs[1]);
+                        }
+                        Group.AddNodeList(nodes);//添加节点表
+
+                        //添加入模型数据库
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            this.StruGroups.Add(Group.GroupName, Group);
+                        }
+                    }
+                    else if (sCurs.Length == 1 && iGroupFlag == 1)//节点数据行
+                    {
+                        List<int> nodes = new List<int>();
+                        string temp = strText;
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            iGroupFlag = 0;//新的组
+                        }
+                        else
+                        {
+                            temp = temp.TrimEnd('\\');
+                        }
+                        nodes = Tools.SelectCollection.StringToList(temp);
+
+                        Group.AddNodeList(nodes);
+
+                        //添加入模型数据库
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            this.StruGroups.Add(Group.GroupName, Group);
+                        }
+                    }
+                    else if (sCurs.Length == 1 && iGroupFlag == 2)//单元数据行
+                    {
+                        List<int> elems = new List<int>();
+                        string temp = strText;
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            iGroupFlag = 0;//新的组
+                        }
+                        else
+                        {
+                            temp = temp.TrimEnd('\\');
+                        }
+                        elems = Tools.SelectCollection.StringToList(temp);
+
+                        Group.AddElemList(elems);
+
+                        //添加入模型数据库
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            this.StruGroups.Add(Group.GroupName, Group);
+                        }
+                    }
+                    else if (sCurs.Length == 2 && iGroupFlag == 1)//同时有节点数据和单元数据
+                    {
+                        List<int> nodes = new List<int>();
+                        List<int> elems = new List<int>();
+                        string temp1 = sCurs[0];
+                        string temp2 = sCurs[1];
+                        if (temp2.EndsWith("\\") == false)
+                        {
+                            iGroupFlag = 0;//新的组
+                        }
+                        else
+                        {
+                            temp2 = temp2.TrimEnd('\\');
+                            iGroupFlag = 2;//更新数据标志
+                        }
+
+                        nodes = Tools.SelectCollection.StringToList(temp1);
+                        elems = Tools.SelectCollection.StringToList(temp2);
+
+                        Group.AddNodeList(nodes);
+                        Group.AddElemList(elems);
+          
+                        //添加入模型数据库
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            this.StruGroups.Add(Group.GroupName, Group);
+                        }
+                    }
+                    else
+                        continue;
+                    #endregion
+                }
+            }
+        }
+
+        /// <summary>
         /// 写出ANSYS命令流文件
         /// </summary>
         /// <param name="inp">写入文件路径</param>
@@ -4144,11 +4949,24 @@ namespace MidasGenModel.model
         {
             FileStream stream = File.Open(inp, FileMode.Create);
             StreamWriter writer = new StreamWriter(stream);
-            writer.WriteLine("FINISH");
-            writer.WriteLine("/CLEAR");
             writer.WriteLine("/COM,Midas2Ansys INP File Created at " + System.DateTime.Now);
             writer.WriteLine("/COM,*******http://www.lubanren.com********");
 
+            #region 宏定义
+            writer.WriteLine("\n!SPC截面宏定义...并执行");
+            foreach (KeyValuePair<int, BSections> sec in this.sections)
+            {
+                if (sec.Value is SectionGeneral)
+                {
+                    SectionGeneral secg = sec.Value as SectionGeneral;
+                    writer.WriteLine(secg.GetSectMac());//取得宏
+                    writer.WriteLine("*use," + secg.Name + ".sec" + "\t!执行宏");
+                }
+            }
+            #endregion
+
+            writer.WriteLine("FINISH");
+            writer.WriteLine("/CLEAR");
             writer.WriteLine("\n/PREP7");
             writer.WriteLine("\n!单元类型信息...");
             switch (BeamType)//根据选择输出单元类型定义命令
@@ -4159,9 +4977,9 @@ namespace MidasGenModel.model
                     break;
                 case 2:
                     writer.WriteLine("et,1,188");
-                    writer.WriteLine("keyopt,1,3,2");
-                    writer.WriteLine("keyopt,1,8,2");
-                    writer.WriteLine("keyopt,1,9,2");
+                    writer.WriteLine("keyopt,1,1,1");
+                    writer.WriteLine("keyopt,1,3,3");
+                    //writer.WriteLine("keyopt,1,9,2");
                     break;
                 case 3:
                     writer.WriteLine("et,1,189");
@@ -4172,6 +4990,8 @@ namespace MidasGenModel.model
             }
             //板单元类型声明
             writer.WriteLine("et,2,181");
+            writer.WriteLine("keyopt,2,3,2");
+            writer.WriteLine("keyopt,2,8,2");            
             //桁架、只受拉、只受压单元类型声明
             writer.WriteLine("et,3,180");
 
@@ -4256,6 +5076,7 @@ namespace MidasGenModel.model
                         writer.WriteLine("type,1");
                         writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
                         writer.WriteLine("secnum," + elem.Value.iPRO.ToString());
+                        writer.WriteLine("real,");
                         writer.WriteLine("en," + elem.Value.NodeString());
                         break;
                     case ElemType.TRUSS:
@@ -4269,6 +5090,7 @@ namespace MidasGenModel.model
                         writer.WriteLine("real,{0}", elem.Value.iPRO.ToString());//厚度号
                         writer.WriteLine("type,2");
                         writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
+                        writer.WriteLine("secnum");//将截面号置为初始值
                         writer.WriteLine("en," + elem.Value.NodeString());
                         break;
                     case ElemType.TENSTR:
@@ -4399,31 +5221,31 @@ namespace MidasGenModel.model
                 {
                     if (bload.Value.LC == lc.LCName)
                     {
-                        //to do:输出单元荷载信息
-                        if (bload.Value.TYPE == "UNIMOMENT" ||
-                            bload.Value.TYPE == "CONMOMENT" ||
+                        //输出单元荷载信息
+                        if (bload.Value.TYPE == BeamLoadType.UNIMOMENT ||
+                            bload.Value.TYPE == BeamLoadType.CONMOMENT ||
                             bload.Value.getP(3) != 0)
                         {
-                            writer.WriteLine("!单元({0})在ANSYS中需要单元细化...", bload.Key.ToString());
+                            writer.WriteLine("!单元({0})荷载为弯矩荷载,在ANSYS中需要单元细化...", bload.Key.ToString());
                         }
-                        else if (bload.Value.TYPE == "UNILOAD")
+                        else if (bload.Value.TYPE == BeamLoadType.UNILOAD)
                         {
                             switch (bload.Value.Dir)
                             {
                                 case DIR.GX:
-                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系不是局部坐标",
+                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系为全局坐标系GX,未处理",
                                         bload.Key.ToString());
                                     break;
                                 case DIR.GY:
-                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系不是局部坐标",
+                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系为全局坐标系GY,未处理",
                                         bload.Key.ToString());
                                     break;
                                 case DIR.GZ:
-                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系不是局部坐标",
+                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系为全局坐标系GZ,未处理",
                                         bload.Key.ToString());
                                     break;
                                 case DIR.LZ:
-                                    writer.WriteLine("sfbeam,{0},1,pres,{1},{2},,,{3},{4}",
+                                    writer.WriteLine("sfbeam,{0},1,pres,{1},{2},,,{3},{4},1",
                                         bload.Key.ToString(),
                                         (-bload.Value.getP(1)).ToString(),
                                         (-bload.Value.getP(2)).ToString(),
@@ -4431,7 +5253,7 @@ namespace MidasGenModel.model
                                         bload.Value.getD(2).ToString());
                                     break;
                                 case DIR.LY:
-                                    writer.WriteLine("sfbeam,{0},2,pres,{1},{2},,,{3},{4}",
+                                    writer.WriteLine("sfbeam,{0},2,pres,{1},{2},,,{3},{4},1",
                                         bload.Key.ToString(),
                                         (-bload.Value.getP(1)).ToString(),
                                         (-bload.Value.getP(2)).ToString(),
@@ -4439,7 +5261,7 @@ namespace MidasGenModel.model
                                         bload.Value.getD(2).ToString());
                                     break;
                                 case DIR.LX:
-                                    writer.WriteLine("sfbeam,{0},3,pres,{1},{2},,,{3},{4}",
+                                    writer.WriteLine("sfbeam,{0},3,pres,{1},{2},,,{3},{4},1",
                                         bload.Key.ToString(),
                                         bload.Value.getP(1).ToString(),
                                         bload.Value.getP(2).ToString(),
@@ -4451,48 +5273,58 @@ namespace MidasGenModel.model
                             }
 
                         }
-                        else if (bload.Value.TYPE == "CONLOAD" && bload.Value.getP(2) == 0)
+                        else if (bload.Value.TYPE == BeamLoadType.CONLOAD && bload.Value.getP(2) == 0)
                         {
                             switch (bload.Value.Dir)
                             {
                                 case DIR.GX:
-                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系不是局部坐标",
+                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系为全局坐标系GX,未处理",
                                         bload.Key.ToString());
                                     break;
                                 case DIR.GY:
-                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系不是局部坐标",
+                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系为全局坐标系GY,未处理",
                                         bload.Key.ToString());
                                     break;
                                 case DIR.GZ:
-                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系不是局部坐标",
+                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系为全局坐标系GZ,未处理",
                                         bload.Key.ToString());
+                                    FrameElement fe = elements[bload.Key] as FrameElement;
+                                    CoordinateSystem cs = fe.ECS;
+                                    double angel = Vector3.zAxis.Angle(cs.AxisZ);
                                     break;
                                 case DIR.LZ:
-                                    writer.WriteLine("sfbeam,{0},1,pres,{1},,,,{3},-1",
+                                    writer.WriteLine("sfbeam,{0},1,pres,{1},,,,{2},-1,1",
                                         bload.Key.ToString(),
                                         (-bload.Value.getP(1)).ToString(),
-                                        bload.Value.getD(1).ToString(),
-                                        bload.Value.getD(2).ToString());
+                                        bload.Value.getD(1).ToString());
                                     break;
                                 case DIR.LY:
-                                    writer.WriteLine("sfbeam,{0},2,pres,{1},,,,{3},-1",
+                                    writer.WriteLine("sfbeam,{0},2,pres,{1},,,,{2},-1,1",
                                         bload.Key.ToString(),
                                         (-bload.Value.getP(1)).ToString(),
-                                        bload.Value.getD(1).ToString(),
-                                        bload.Value.getD(2).ToString());
+                                        bload.Value.getD(1).ToString());
                                     break;
                                 case DIR.LX:
-                                    writer.WriteLine("sfbeam,{0},3,pres,{1},,,,{3},-1",
+                                    writer.WriteLine("sfbeam,{0},3,pres,{1},,,,{2},-1,1",
                                         bload.Key.ToString(),
                                         bload.Value.getP(1).ToString(),
-                                        bload.Value.getD(1).ToString(),
-                                        bload.Value.getD(2).ToString());
+                                        bload.Value.getD(1).ToString());
                                     break;
                                 default:
                                     break;
                             }
                         }
                     }
+                }
+                #endregion
+                #region 输出单元温度荷载
+                foreach (KeyValuePair<int, BETLoad> Eload in this._EleTempLoads)
+                {
+                    if (Eload.Value.LC != lc.LCName)
+                        continue;
+                    writer.WriteLine("bfe,{0},temp,1,{1}",
+                        Eload.Value.Elem_Num,
+                        Eload.Value.Temp.ToString());
                 }
                 #endregion
                 writer.WriteLine("*end");
@@ -4506,7 +5338,80 @@ namespace MidasGenModel.model
         }
 
         /// <summary>
-        /// 读取MIDAS输出的内力结果入模型
+        /// 写出ansys宏文件
+        /// 功能：将荷载转化为质量
+        /// </summary>
+        /// <param name="dir">宏文件目录</param>
+        /// <returns>是否成功</returns>
+        public bool WriteAnsysMarc_Load2Mass(string dir)
+        {
+            string FileName=Path.Combine(dir,"loadtomass.mac");
+            using (FileStream stream = File.Open(FileName, FileMode.Create))
+            {
+                StreamWriter writer = new StreamWriter(stream);
+
+                #region 宏文件内容
+                writer.WriteLine("!宏文件功能：将荷载转化为质量");
+                writer.WriteLine("/COM,Ansys Mac File Created at " + System.DateTime.Now);
+                writer.WriteLine("/COM,*******http://www.lubanren.com********");
+
+                writer.WriteLine("et,11,21");
+                writer.WriteLine("keyopt,11,1,0");
+                writer.WriteLine("keyopt,11,2,0");
+                writer.WriteLine("keyopt,11,3,0");
+
+                writer.WriteLine("!todo:通过实常数定义节点质量");
+                writer.WriteLine("*get,enmax, elem,0, num, maxd");
+
+                //节点荷载进行遍历
+                BLoadTable blt = this.LoadTable;
+                SortedList<int, BNLoad> NLoad_DL = blt.NLoadData["DL"] as SortedList<int, BNLoad>;
+                SortedList<int, BNLoad> NLoad_LL = blt.NLoadData["LL"] as SortedList<int, BNLoad>;
+                double DL_ra=1.0;//工况荷载系数
+                double LL_ra=0.5;
+                int i = 1;//单元数指示标志
+
+                List<int> nodes = blt.NodeListForNLoad;//具有节点荷载的节点列表
+                foreach (int nn in nodes)
+                {
+                    
+                    if (NLoad_DL.ContainsKey(nn) || NLoad_LL.ContainsKey(nn))
+                    {
+                        double mass = 0;
+                        if (NLoad_DL.ContainsKey(nn))
+                        {
+                            mass +=Math.Abs(NLoad_DL[nn].FZ) / 9.8 * DL_ra;
+                        }
+                        if (NLoad_LL.ContainsKey(nn))
+                        {
+                            mass += Math.Abs(NLoad_LL[nn].FZ) / 9.8 * LL_ra;
+                        }
+                        //实常数定义
+                        writer.WriteLine("r,enmax+{0},{1},{1},{1},,,", i, mass.ToString("0.0"));
+
+                        //单元定义
+                        writer.WriteLine("real,enmax+{0}",i);
+                        writer.WriteLine("type,11$mat$secnum");
+                        writer.WriteLine("en,enmax+{0},{1}",i,nn);
+                        i++;
+                    }
+                }
+
+                //清理垃圾
+                writer.WriteLine("enmax=");
+                writer.WriteLine("real$type$mat$secnum");
+
+                #endregion
+
+                writer.Close();
+                stream.Close();
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 读取MIDAS输出的梁单元内力结果入模型
         /// </summary>
         /// <param name="MidasFile">MIDAS输出的单元内力表，单位默认为kN,m</param>
         public void ReadElemForces(string MidasForceFile)
@@ -4628,176 +5533,75 @@ namespace MidasGenModel.model
             }
             reader.Close();
         }
+
+        /// <summary>
+        /// 读取Midas输出的Truss单元内力信息
+        /// </summary>
+        /// <param name="MidasTrussForceOut">桁架单元内力表，单位默认为kN</param>
+        public void ReadTrussForces(string MidasTrussForceOut)
+        {
+            string line = null;//行文本
+            string[] curdata = null;//当前数据表存储变量
+            int curNum = 0;//当前单元号
+            string curLC = null;//当前工况名
+            double[] tempDouble = new double[2];
+
+            int i = 0;
+
+            FileStream stream = File.Open(MidasTrussForceOut, FileMode.Open, FileAccess.Read);
+            StreamReader reader = new StreamReader(stream);
+            line = reader.ReadLine();
+
+            for (line = reader.ReadLine(); line != null; line = reader.ReadLine())
+            {
+                curdata = line.Split("\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);//字符串分割
+                curNum = int.Parse(curdata[0], System.Globalization.NumberStyles.Number);//当前单元号
+                curLC = curdata[1];//当前工况名称
+                //取得内力数据
+                for (int k = 0; k < 2; k++)
+                {
+                    tempDouble[k] = double.Parse(curdata[k +2], System.Globalization.NumberStyles.Float);
+                }
+
+                //建立截面内力
+                SecForce sec1 = new SecForce(tempDouble[0], 0, 0, 0, 0, 0);//I截面内力
+                SecForce sec2 = new SecForce(tempDouble[1], 0, 0, 0, 0, 0);//J截面内力
+
+                #region 往模型数据结构中添加
+                if (this.elemforce.ContainsKey(curNum))//如果已有当前单元
+                {
+                    if (this.elemforce[curNum].hasLC(curLC))//如果已有当前组合
+                    {
+                        SortedList<string, ElemForce> tempEF = this.elemforce[curNum].LCForces;
+                        tempEF[curLC].SetElemForce(sec1, sec2);
+                        this.elemforce[curNum].LCForces = tempEF;//反回的到模型数据库中
+                    }
+                    else
+                    {
+                        ElemForce ef = new ElemForce();
+                        ef.SetElemForce(sec1, sec2);
+                        this.elemforce[curNum].add_LCForce(curLC, ef);
+                    }
+                }
+                else
+                {
+                    ElemForce ef = new ElemForce();
+                    ef.SetElemForce(sec1, sec2);
+                    BElemForceTable eft = new BElemForceTable();
+                    eft.add_LCForce(curLC, ef);
+                    this.elemforce.Add(curNum, eft);
+                }
+                #endregion
+
+                i++;
+            }
+
+            reader.Close();
+        }
         #endregion
     }
 
     #region 常用基本数据类型
-    /// <summary>
-    /// 3d点类
-    /// </summary>
-    public class Point3d : Object
-    {
-        private double XX, YY, ZZ;
-        /// <summary>
-        /// 默认构造函数
-        /// </summary>
-        public Point3d()
-        {
-            XX = 0;
-            YY = 0;
-            ZZ = 0;
-        }
-        /// <summary>
-        /// 带参数的构造函数
-        /// </summary>
-        /// <param name="nx">节点X坐标</param>
-        /// <param name="ny">节点Y坐标</param>
-        /// <param name="nz">节点Z坐标</param>
-        public Point3d(double nx, double ny, double nz)
-        {
-            XX = nx;
-            YY = ny;
-            ZZ = nz;
-        }
-        //属性
-        public double X
-        {
-            get { return XX; }
-            set { XX = value; }
-        }
-        public double Y
-        {
-            get { return YY; }
-            set { YY = value; }
-        }
-        public double Z
-        {
-            get { return ZZ; }
-            set { ZZ = value; }
-        }
-        //索引函数
-        public double this[int index]
-        {
-            get
-            {
-                switch (index)
-                {
-                    case 0: { return XX; }
-                    case 1: { return YY; }
-                    case 2: { return ZZ; }
-                    default: throw new ArgumentException(THREE_COMPONENTS, "index");
-                }
-            }
-            set
-            {
-                switch (index)
-                {
-                    case 0: { XX = value; break; }
-                    case 1: { YY = value; break; }
-                    case 2: { ZZ = value; break; }
-                    default: throw new ArgumentException(THREE_COMPONENTS, "index");
-                }
-            }
-        }
-
-        private const string THREE_COMPONENTS =
-            "Point3d must contain exactly three components,(x,y,z)";
-    }
-    
-    /// <summary>
-    /// 2d点类
-    /// </summary>
-    [Serializable]
-    public class Point2d : Object
-    {
-        private double XX, YY;
-        /// <summary>
-        /// 默认构造函数
-        /// </summary>
-        public Point2d()
-        {
-            XX = 0;
-            YY = 0;
-        }
-        /// <summary>
-        /// 带参数的构造函数
-        /// </summary>
-        /// <param name="nx">节点X坐标</param>
-        /// <param name="ny">节点Y坐标</param>
-        public Point2d(double nx, double ny)
-        {
-            XX = nx;
-            YY = ny;
-        }
-        //属性
-        public double X
-        {
-            get { return XX; }
-            set { XX = value; }
-        }
-        public double Y
-        {
-            get { return YY; }
-            set { YY = value; }
-        }
-    }
-
-    /// <summary>
-    /// 二维点集合
-    /// </summary>
-    [Serializable]
-    public class Point2dCollection:Object
-    {
-        private List<Point2d> _pts;
-
-        //属性
-        /// <summary>
-        /// 点集
-        /// </summary>
-        public List<Point2d> Pts
-        {
-            get { return _pts; }
-        }
-
-        /// <summary>
-        /// 点数量
-        /// </summary>
-        public int Length
-        {
-            get { return _pts.Count; }
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public Point2dCollection()
-        {
-            _pts = new List<Point2d>();
-        }
-
-        /// <summary>
-        /// 添加点入集合
-        /// </summary>
-        /// <param name="pt">点坐标</param>
-        public void addPt(Point2d pt)
-        {
-            _pts.Add(pt);
-        }
-
-        /// <summary>
-        /// 索引器
-        /// </summary>
-        /// <param name="index">索引值</param>
-        /// <returns>二维点</returns>
-        public Point2d this[int index]
-        {
-            get
-            {
-                return _pts[index];
-            }
-        }
-    }
-
     /// <summary>
     /// 实现hash表重复键成员的添加
     /// </summary>
