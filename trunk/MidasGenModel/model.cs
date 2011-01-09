@@ -478,7 +478,10 @@ namespace MidasGenModel.model
                 case LCKind.CONC: _ComCon.Add(com.NAME); break;
                 default: _ComGen.Add(com.NAME); break;
             }
-            _LoadCombData.Add(com.NAME, com);//添加数据
+            if (this.ContainsKey(com.NAME))//如果组合表中含有组合名，则不添加
+                return;
+            else 
+                _LoadCombData.Add(com.NAME, com);//添加数据
         }
         /// <summary>
         /// 移除指定荷载组合
@@ -2277,6 +2280,7 @@ namespace MidasGenModel.model
     /// <summary>
     /// 渐变截面信息类
     /// </summary>
+    [Serializable]
     public class SectionTapered : BSections
     {
         /// <summary>

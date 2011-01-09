@@ -18,6 +18,7 @@ namespace Midas2ANSYS
             InitializeComponent();
             comboBox1.SelectedIndex = 1;
             //this.Text = "MIDAS to ANSYS (" ++ ")";
+            CollapseForm();//收起信息框
         }
 
         private void bn_loadmgt_Click(object sender, EventArgs e)
@@ -59,15 +60,20 @@ namespace Midas2ANSYS
             }
             else
             {
-                //To do:执行文件转换
                 Bmodel modelinfo=new Bmodel ();//局部变量，用于存储模型数据
                 modelinfo.ReadFromMgt (tb_mgt.Text);
                 //写出二进制文件
-                MidasGenModel.Application.WriteModelBinary(
-                    modelinfo, Path.ChangeExtension(tb_mgt.Text, ".GA1"));
-                //if (WriteInp(tb_inp.Text, modelinfo) == true)
-                if (modelinfo.WriteToInp(tb_inp.Text,comboBox1.SelectedIndex+1) == true)
-                    MessageBox.Show("恭喜，转换完成^_^","完成情况",MessageBoxButtons.OK,MessageBoxIcon.Asterisk);
+                //MidasGenModel.Application.WriteModelBinary(
+                //    modelinfo, Path.ChangeExtension(tb_mgt.Text, ".GA1"));
+                if (modelinfo.WriteToInp(tb_inp.Text, comboBox1.SelectedIndex + 1) == true)
+                {
+                    if (splitContainer1.Panel2Collapsed)
+                        CollapseForm();
+                    tb_Out.AppendText(Environment.NewLine+"恭喜，转换成功完成^_^");
+                    tb_Out.AppendText(Environment.NewLine+"模型节点数："+modelinfo.nodes.Count.ToString()+
+                        "  单元数:"+modelinfo.elements.Count.ToString());
+                    tb_Out.AppendText(Environment.NewLine+"inp文件成功保存在："+tb_inp.Text);
+                }
             }
         }
         /// <summary>
@@ -77,7 +83,7 @@ namespace Midas2ANSYS
         /// <param name="e"></param>
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start("http://www.lubanren.com/weblog/");
+            System.Diagnostics.Process.Start("http://www.lubanren.com/");
         }
 
         //自动完成输出文件路径
@@ -90,7 +96,7 @@ namespace Midas2ANSYS
         }
 
         /// <summary>
-        /// 测试用
+        /// 测试用命令函数
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -113,7 +119,31 @@ namespace Midas2ANSYS
             ElemForce ef = mm.CalElemForceComb(comb, 4);
             MessageBox.Show("OK");
         }
-    
+
+        private void Tx_Click(object sender, EventArgs e)
+        {
+            CollapseForm();
+        }
+        //展开收起信息框
+        private void CollapseForm()
+        {
+            bool isCollapse = splitContainer1.Panel2Collapsed;
+            if (!isCollapse)
+            {
+                int Hp2 = splitContainer1.Panel2.Height;
+                splitContainer1.Panel2Collapsed = !splitContainer1.Panel2Collapsed;
+                this.Height -= Hp2;
+                Tx.Text = "展开";
+            }
+            else
+            {
+                splitContainer1.Panel2Collapsed = !splitContainer1.Panel2Collapsed;
+                int Hp2 = splitContainer1.Panel2.Height;
+                this.Height += Hp2;
+                Tx.Text = "收起";
+            }
+        }
+
     }
     
 }
