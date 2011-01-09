@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Lubanren.com")]
 [assembly: AssemblyProduct("Midas2ANSYS")]
-[assembly: AssemblyCopyright("版权所有 (C) lubanren.com 2009")]
+[assembly: AssemblyCopyright("版权所有 (C) lubanren.com 2008-2011")]
 [assembly: AssemblyTrademark("LubanRen")]
 [assembly: AssemblyCulture("")]
 
