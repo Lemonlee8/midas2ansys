@@ -30,7 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.tb_Out = new System.Windows.Forms.TextBox();
+            this.Tx = new System.Windows.Forms.Button();
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
@@ -44,7 +44,7 @@
             this.bn_loadmgt = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.tb_mgt = new System.Windows.Forms.TextBox();
-            this.Tx = new System.Windows.Forms.Button();
+            this.tb_Out = new System.Windows.Forms.TextBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -77,19 +77,15 @@
             this.splitContainer1.SplitterDistance = 240;
             this.splitContainer1.TabIndex = 5;
             // 
-            // tb_Out
+            // Tx
             // 
-            this.tb_Out.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tb_Out.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.tb_Out.Location = new System.Drawing.Point(11, 3);
-            this.tb_Out.Multiline = true;
-            this.tb_Out.Name = "tb_Out";
-            this.tb_Out.ReadOnly = true;
-            this.tb_Out.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tb_Out.Size = new System.Drawing.Size(454, 125);
-            this.tb_Out.TabIndex = 5;
+            this.Tx.Location = new System.Drawing.Point(138, 202);
+            this.Tx.Name = "Tx";
+            this.Tx.Size = new System.Drawing.Size(50, 23);
+            this.Tx.TabIndex = 10;
+            this.Tx.Text = "收起";
+            this.Tx.UseVisualStyleBackColor = true;
+            this.Tx.Click += new System.EventHandler(this.Tx_Click);
             // 
             // linkLabel1
             // 
@@ -143,7 +139,7 @@
             this.bt_cancle.Name = "bt_cancle";
             this.bt_cancle.Size = new System.Drawing.Size(75, 23);
             this.bt_cancle.TabIndex = 7;
-            this.bt_cancle.Text = "取 消";
+            this.bt_cancle.Text = "关 闭";
             this.bt_cancle.UseVisualStyleBackColor = true;
             this.bt_cancle.Click += new System.EventHandler(this.bt_cancle_Click);
             // 
@@ -229,15 +225,19 @@
             this.tb_mgt.TextChanged += new System.EventHandler(this.tb_mgt_TextChanged);
             this.tb_mgt.DoubleClick += new System.EventHandler(this.bn_loadmgt_Click);
             // 
-            // Tx
+            // tb_Out
             // 
-            this.Tx.Location = new System.Drawing.Point(138, 202);
-            this.Tx.Name = "Tx";
-            this.Tx.Size = new System.Drawing.Size(50, 23);
-            this.Tx.TabIndex = 10;
-            this.Tx.Text = "收起";
-            this.Tx.UseVisualStyleBackColor = true;
-            this.Tx.Click += new System.EventHandler(this.Tx_Click);
+            this.tb_Out.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tb_Out.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tb_Out.Location = new System.Drawing.Point(11, 3);
+            this.tb_Out.Multiline = true;
+            this.tb_Out.Name = "tb_Out";
+            this.tb_Out.ReadOnly = true;
+            this.tb_Out.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.tb_Out.Size = new System.Drawing.Size(454, 125);
+            this.tb_Out.TabIndex = 5;
             // 
             // Form1
             // 
