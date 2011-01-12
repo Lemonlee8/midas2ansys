@@ -1250,7 +1250,7 @@ namespace MidasGenModel.model
     }
 
     /// <summary>
-    /// 节点荷载表类
+    /// 荷载表类
     /// </summary>
     [Serializable]
     public class BLoadTable
@@ -1325,6 +1325,30 @@ namespace MidasGenModel.model
                 //添加当前组合节点表入总表
                 if (CurNLoadData.Count>0)
                     _NLoadData.Add(lc.LCName, CurNLoadData);                
+            }
+        }
+        /// <summary>
+        /// 按旧数据更新荷载表中的单元荷载
+        /// </summary>
+        /// <param name="LCs">工况列表</param>
+        /// <param name="ELoadData">旧版单元荷载数据</param>
+        public void UpdateElemLoadList(List<BLoadCase> LCs,SortedList<int,BBLoad> ELoadData)
+        {
+            foreach (BLoadCase lc in LCs)
+            {
+                //当前组合的单元荷载表
+                SortedList<int, BBLoad> CurELoadData = new SortedList<int, BBLoad>();
+
+                foreach (KeyValuePair<int, BBLoad> ELoad in ELoadData)
+                {
+                    if (ELoad.Value.LC == lc.LCName)
+                    {
+                        CurELoadData.Add(ELoad.Key, ELoad.Value);
+                    }
+                }
+                //添加当前组合节点表入总表
+                if (CurELoadData.Count > 0)
+                    _BeamLoadData.Add(lc.LCName, CurELoadData);
             }
         }
 
@@ -3566,12 +3590,12 @@ namespace MidasGenModel.model
         //荷载表
          private BLoadTable _LoadTable;
         /// <summary>
-        /// 节点荷载链表
+        /// 节点荷载链表----计划用_LoadTable替代
         /// </summary>
         public SortedList<int, BNLoad> conloads;
 
         /// <summary>
-        /// 梁单元荷载链表
+        /// 梁单元荷载链表----计划用_LoadTable替代
         /// </summary>
         public SortedList<int, BBLoad> beamloads;
 
@@ -3848,6 +3872,7 @@ namespace MidasGenModel.model
 
             //更新最新的荷载表数据
             _LoadTable.UpdateNodeLoadList(this.STLDCASE, this.conloads);
+            _LoadTable.UpdateElemLoadList(this.STLDCASE, this.beamloads);
         }
 
         /// <summary>
@@ -4060,7 +4085,7 @@ namespace MidasGenModel.model
             int tempInt1, tempInt2, tempInt3, tempInt4, tempInt5, tempInt6, tempInt7 = 0;
 
             FileStream stream = File.Open(FilePath, FileMode.Open, FileAccess.Read);
-            StreamReader reader = new StreamReader(stream);
+            StreamReader reader = new StreamReader(stream,System.Text.Encoding.Default);
             for (string line = reader.ReadLine(); line != null; line = reader.ReadLine())
             {
                 //本行数据类型判断
@@ -5245,8 +5270,12 @@ namespace MidasGenModel.model
                                         bload.Key.ToString());
                                     break;
                                 case DIR.GZ:
-                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系为全局坐标系GZ,未处理",
+                                    writer.WriteLine("!单元({0})的单元荷载施加坐标系为全局坐标系GZ,暂按局部坐标处理",
                                         bload.Key.ToString());
+                                    writer.WriteLine("sfbeam,{0},1,pres,{1},{2},,,,,1",
+                                        bload.Key.ToString(),
+                                        (-bload.Value.getP(1)).ToString(),
+                                        (-bload.Value.getP(2)).ToString());
                                     break;
                                 case DIR.LZ:
                                     writer.WriteLine("sfbeam,{0},1,pres,{1},{2},,,{3},{4},1",
