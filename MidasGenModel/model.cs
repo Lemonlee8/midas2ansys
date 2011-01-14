@@ -5111,6 +5111,7 @@ namespace MidasGenModel.model
                     case ElemType.TRUSS:
                         writer.WriteLine("type,3");
                         writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
+                        writer.WriteLine("secnum,");
                         writer.WriteLine("real,{0}",elem.Value.iPRO+100);
                         writer.WriteLine("en,{0}",elem.Value.NodeString());
                         break;
@@ -5126,6 +5127,7 @@ namespace MidasGenModel.model
                         //writer.WriteLine("!{0}号单元是只拉单元", elem.Value.iEL.ToString());
                         writer.WriteLine("type,3");
                         writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
+                        writer.WriteLine("secnum,");
                         writer.WriteLine("real,{0}", elem.Value.iPRO + 200);
                         writer.WriteLine("en,{0}", elem.Value.NodeString());
                         break;
@@ -5133,6 +5135,7 @@ namespace MidasGenModel.model
                         //writer.WriteLine("!{0}号单元是只压单元", elem.Value.iEL.ToString());
                         writer.WriteLine("type,3");
                         writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
+                        writer.WriteLine("secnum,");
                         writer.WriteLine("real,{0}", elem.Value.iPRO + 300);
                         writer.WriteLine("en,{0}", elem.Value.NodeString());
                         break;
