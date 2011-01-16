@@ -2821,6 +2821,160 @@ namespace MidasGenModel.model
     }
 
     /// <summary>
+    /// 刚性连接类
+    /// </summary>
+    [Serializable]
+    public class BRigidLink : Object
+    {
+        #region 成员
+        private int _MNode;
+        private bool _bUx,_bUy,_bUz,_bRx,_bRy,_bRz;
+        private List<int> _SNodesList;
+        private string _Group;//边界组名
+        #endregion
+
+        #region 属性
+        /// <summary>
+        /// 主节点号
+        /// </summary>
+        public int MNode
+        {
+            set { _MNode = value; }
+            get { return _MNode; }
+        }
+        /// <summary>
+        /// 是否约束刚性连接自由度Ux
+        /// </summary>
+        public bool bUx
+        {
+            get { return _bUx; }
+        }
+        /// <summary>
+        /// 是否约束刚性连接自由度Uy
+        /// </summary>
+        public bool bUy
+        {
+            get { return _bUy; }
+        }
+        /// <summary>
+        /// 是否约束刚性连接自由度Uz
+        /// </summary>
+        public bool bUz
+        {
+            get { return _bUz; }
+        }
+        /// <summary>
+        /// 是否约束刚性连接自由度Rx
+        /// </summary>
+        public bool bRx
+        {
+            get { return _bRx; }
+        }
+        /// <summary>
+        /// 是否约束刚性连接自由度Ry
+        /// </summary>
+        public bool bRy
+        {
+            get { return _bRy; }
+        }
+        /// <summary>
+        /// 是否约束刚性连接自由度Rz
+        /// </summary>
+        public bool bRz
+        {
+            get { return _bRz; }
+        }
+        /// <summary>
+        /// 刚性连接从属节点列表
+        /// </summary>
+        public List<int> SNodesList
+        {
+            get { return _SNodesList; }
+        }
+        /// <summary>
+        /// 边界条件组名
+        /// </summary>
+        public string Group
+        {
+            set { _Group = value; }
+            get { return _Group; }
+        }
+        #endregion
+
+        #region 构造函数
+        /// <summary>
+        /// 无参数化构造函数
+        /// </summary>
+        public BRigidLink()
+        {
+            _MNode = new int ();
+            _bUx = false; _bUy = false; _bUz = false;
+            _bRx = false; _bRy = false; _bRz = false;
+            _SNodesList = new List<int>();
+            _Group = null;
+        }
+        #endregion
+        #region 方法
+        /// <summary>
+        /// 添加从属节点
+        /// </summary>
+        /// <param name="NewList">新的节点列表</param>
+        public void AddSNodesList(List<int> NewList)
+        {
+            foreach (int NewNode in NewList)
+            {
+                if (_SNodesList.Contains(NewNode))
+                    continue;
+                else
+                {
+                    _SNodesList.Add(NewNode);
+                }
+            }
+
+            _SNodesList.Sort();//排序
+        }
+
+        /// <summary>
+        /// 按100100的格式设置约束自由度
+        /// </summary>
+        /// <param name="FlagString">格式字符串，只有六个字符"100100"</param>
+        public void SetUxyzRxyz(string FlagString)
+        {
+            //如果字符数不为6则直接反回
+            if (FlagString.Length != 6)
+                return;
+
+            if (FlagString[0] == '1')
+                _bUx = true;
+            else
+                _bUx = false;
+            if (FlagString[1] == '1')
+                _bUy = true;
+            else
+                _bUy = false;
+            if (FlagString[2] == '1')
+                _bUz = true;
+            else
+                _bUz = false;
+            if (FlagString[3] == '1')
+                _bRx = true;
+            else
+                _bRx = false;
+            if (FlagString[4] == '1')
+                _bRy = true;
+            else
+                _bRy = false;
+            if (FlagString[5] == '1')
+                _bRz = true;
+            else
+                _bRz = false;
+      
+        }
+        #endregion
+
+    }
+
+    /// <summary>
     /// 材料特性值类
     /// </summary>
     [Serializable]
@@ -3599,10 +3753,7 @@ namespace MidasGenModel.model
         /// </summary>
         public SortedList<int, BBLoad> beamloads;
 
-        /// <summary>
-        /// 单元温度荷载
-        /// </summary>
-        private SortedList<int, BETLoad> _EleTempLoads;
+
 
         /// <summary>
         /// 自重荷载信息链表
@@ -3618,8 +3769,12 @@ namespace MidasGenModel.model
         /// 单元内力链表
         /// </summary>
         public SortedList<int, BElemForceTable> elemforce;
+        #endregion
 
+        #region 私有成员
+        private SortedList<int, BETLoad> _EleTempLoads;//单元温度荷载
         private SortedList<string, BSGroup> _StruGroups;//结构组链表
+        private SortedList<int, BRigidLink> _RigidLinks;//刚性连接表
         #endregion
 
         #region 属性
@@ -3673,6 +3828,7 @@ namespace MidasGenModel.model
             elemforce = new SortedList<int, BElemForceTable>();//单元内力表
 
             _StruGroups = new SortedList<string, BSGroup>();//结构组表
+            _RigidLinks = new SortedList<int, BRigidLink>();//刚性连接表
         }
         #endregion
 
@@ -4708,6 +4864,13 @@ namespace MidasGenModel.model
             sr.Close();
             #endregion
 
+            #region 再次打开文件并读取刚性连接数据
+            str = File.Open(FilePath, FileMode.Open, FileAccess.Read);
+            sr = new StreamReader(str, Encoding.Default);//用系统默认编码打开
+            ReadRigidLinks(ref sr);
+            sr.Close();
+            #endregion
+
             Normalize();//模型标准化处理
             GenBeamKpoint();//计算模型中梁单元的节点方向点信息
         }
@@ -4960,6 +5123,140 @@ namespace MidasGenModel.model
                         if (strText.EndsWith("\\") == false)
                         {
                             this.StruGroups.Add(Group.GroupName, Group);
+                        }
+                    }
+                    else
+                        continue;
+                    #endregion
+                }
+            }
+        }
+
+        /// <summary>
+        /// 读取刚性连接数据
+        /// </summary>
+        /// <param name="srt">mgt文件流</param>
+        public void ReadRigidLinks(ref StreamReader srt)
+        {
+            /* 1、准备*/
+            bool bRead = false;                     //是否可以读取
+            String strText = null;                  //当前行文本
+            String strStartFlag = "*RIGIDLINK";      //数据开始标志
+            String strEndFlag = "";                 //数据结束标志
+            char szSplit = ',';                     //数据分隔符
+            int iGroupFlag = 0;                  //组数据标志：0-新组,1-节点数据
+
+            /* 2、循环读取*/
+            BRigidLink RigidLink = null;                   //组
+            for (strText = srt.ReadLine(); strText != null; strText = srt.ReadLine())
+            {
+                /* 2.1、判断是否读到数据。若读到，设置标志，进入下一轮循环开始读取；若没有读到，继续进入下一轮判断。*/
+                /* 2.2、bRead=true，表示已经可以读数据了。读的时候要判断是否已经读完数据。*/
+                if (!bRead)
+                {
+                    if (strText.StartsWith(strStartFlag))
+                    {
+                        bRead = true;
+                    }
+                    continue;
+                }
+                else if (strText.StartsWith(";"))//如果为注释则忽略
+                    continue;
+                else if (strText.CompareTo(strEndFlag) == 0)//如果读取数据结尾则返回
+                    return;
+                else
+                {
+                    #region 读取数据开始
+                    string[] sCurs = strText.Trim().Split(szSplit);
+                    if (sCurs.Length == 4 && iGroupFlag == 0)//所有数据均在一行时
+                    {
+                        RigidLink = new BRigidLink();//创建新的刚性连接
+                        List<int> nodes = new List<int>();
+                        nodes = Tools.SelectCollection.StringToList(sCurs[2]);
+                        RigidLink.MNode = Convert.ToInt32(sCurs[0].Trim());//主节点号
+                        RigidLink.SetUxyzRxyz(sCurs[1].Trim());//设置约束自由度
+                        RigidLink.AddSNodesList(nodes);//添加从属节点表
+                        RigidLink.Group = sCurs[3];//边界组名
+
+                        //添加入模型数据库
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            this._RigidLinks.Add(RigidLink.MNode, RigidLink);
+                        }
+                        else
+                        {
+                            iGroupFlag = 1;      //指定下一行为旧数据
+                        }
+                    }
+                    else  if (sCurs.Length == 3 && iGroupFlag == 0)//第一行有两个分隔符时
+                    {
+                        RigidLink = new BRigidLink();//创建新的刚性连接
+                        List<int> elems = new List<int>();
+                        if (sCurs[2].EndsWith("\\"))
+                        {
+                            iGroupFlag = 1;      //指定下一行为旧数据
+                            elems = Tools.SelectCollection.StringToList(sCurs[2].TrimEnd('\\'));
+                        }
+                        else
+                        {
+                            iGroupFlag = 0;     //指定下一行为新组
+                            elems = Tools.SelectCollection.StringToList(sCurs[2]);
+                        }
+                        RigidLink.MNode = Convert.ToInt32(sCurs[0].Trim());//主节点号
+                        RigidLink.SetUxyzRxyz(sCurs[1].Trim());//设置约束自由度
+                        RigidLink.AddSNodesList(elems);//添加从属节点表
+
+                        //添加入模型数据库
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            this._RigidLinks.Add(RigidLink.MNode, RigidLink);
+                        }
+                    }
+                    else if (sCurs.Length == 1 && iGroupFlag == 1)//旧数据行
+                    {
+                        List<int> nodes = new List<int>();
+                        string temp = strText;
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            iGroupFlag = 0;//新的组
+                        }
+                        else
+                        {
+                            temp = temp.TrimEnd('\\');
+                        }
+                        nodes = Tools.SelectCollection.StringToList(temp);
+
+                        RigidLink.AddSNodesList(nodes);
+
+                        //添加入模型数据库
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            this._RigidLinks.Add(RigidLink.MNode, RigidLink);
+                        }
+                    }
+                    else if (sCurs.Length == 2 && iGroupFlag == 1)//读到行尾
+                    {
+                        List<int> nodes = new List<int>();
+                        string temp1 = sCurs[0].Trim();
+                        string temp2 = sCurs[1].Trim();
+                        if (temp2.EndsWith("\\") == false)
+                        {
+                            iGroupFlag = 0;//新的组
+                        }
+                        else
+                        {
+                            temp2 = temp2.TrimEnd('\\');
+                            iGroupFlag = 2;//更新数据标志
+                        }
+                        nodes = Tools.SelectCollection.StringToList(temp1);
+
+                        RigidLink.AddSNodesList(nodes);
+                        RigidLink.Group = temp2;//边界组名
+
+                        //添加入模型数据库
+                        if (strText.EndsWith("\\") == false)
+                        {
+                            this._RigidLinks.Add(RigidLink.MNode, RigidLink);
                         }
                     }
                     else

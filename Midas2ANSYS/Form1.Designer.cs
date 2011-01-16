@@ -135,7 +135,7 @@
             // bt_cancle
             // 
             this.bt_cancle.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.bt_cancle.Location = new System.Drawing.Point(366, 202);
+            this.bt_cancle.Location = new System.Drawing.Point(390, 202);
             this.bt_cancle.Name = "bt_cancle";
             this.bt_cancle.Size = new System.Drawing.Size(75, 23);
             this.bt_cancle.TabIndex = 7;
@@ -145,7 +145,7 @@
             // 
             // bt_run
             // 
-            this.bt_run.Location = new System.Drawing.Point(245, 202);
+            this.bt_run.Location = new System.Drawing.Point(290, 202);
             this.bt_run.Name = "bt_run";
             this.bt_run.Size = new System.Drawing.Size(75, 23);
             this.bt_run.TabIndex = 6;
@@ -170,7 +170,7 @@
             // 
             // bn_loadinp
             // 
-            this.bn_loadinp.Location = new System.Drawing.Point(360, 86);
+            this.bn_loadinp.Location = new System.Drawing.Point(368, 86);
             this.bn_loadinp.Name = "bn_loadinp";
             this.bn_loadinp.Size = new System.Drawing.Size(72, 23);
             this.bn_loadinp.TabIndex = 5;
@@ -198,7 +198,7 @@
             // 
             // bn_loadmgt
             // 
-            this.bn_loadmgt.Location = new System.Drawing.Point(360, 38);
+            this.bn_loadmgt.Location = new System.Drawing.Point(368, 38);
             this.bn_loadmgt.Name = "bn_loadmgt";
             this.bn_loadmgt.Size = new System.Drawing.Size(72, 23);
             this.bn_loadmgt.TabIndex = 2;
