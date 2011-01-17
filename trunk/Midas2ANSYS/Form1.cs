@@ -62,9 +62,6 @@ namespace Midas2ANSYS
             {
                 Bmodel modelinfo=new Bmodel ();//局部变量，用于存储模型数据
                 modelinfo.ReadFromMgt (tb_mgt.Text);
-                //写出二进制文件
-                //MidasGenModel.Application.WriteModelBinary(
-                //    modelinfo, Path.ChangeExtension(tb_mgt.Text, ".GA1"));
                 if (modelinfo.WriteToInp(tb_inp.Text, comboBox1.SelectedIndex + 1) == true)
                 {
                     if (splitContainer1.Panel2Collapsed)
@@ -73,6 +70,15 @@ namespace Midas2ANSYS
                     tb_Out.AppendText(Environment.NewLine+"模型节点数："+modelinfo.nodes.Count.ToString()+
                         "  单元数:"+modelinfo.elements.Count.ToString());
                     tb_Out.AppendText(Environment.NewLine+"inp文件成功保存在："+tb_inp.Text);
+                }
+
+                //如果输出结构组宏则执行
+                if (cb_MacroGroup.Checked)
+                {
+                    if (modelinfo.WriteAnsysComponents(Path.GetDirectoryName(tb_mgt.Text)))
+                    {
+                        tb_Out.AppendText(Environment.NewLine + "[宏]结构组信息转化成Components成功!");
+                    }
                 }
             }
         }
