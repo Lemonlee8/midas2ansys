@@ -45,6 +45,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.tb_mgt = new System.Windows.Forms.TextBox();
             this.tb_Out = new System.Windows.Forms.TextBox();
+            this.cb_MacroGroup = new System.Windows.Forms.CheckBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -100,6 +101,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.cb_MacroGroup);
             this.groupBox2.Controls.Add(this.comboBox1);
             this.groupBox2.Controls.Add(this.label3);
             this.groupBox2.Location = new System.Drawing.Point(11, 134);
@@ -239,6 +241,16 @@
             this.tb_Out.Size = new System.Drawing.Size(454, 125);
             this.tb_Out.TabIndex = 5;
             // 
+            // cb_MacroGroup
+            // 
+            this.cb_MacroGroup.AutoSize = true;
+            this.cb_MacroGroup.Location = new System.Drawing.Point(194, 28);
+            this.cb_MacroGroup.Name = "cb_MacroGroup";
+            this.cb_MacroGroup.Size = new System.Drawing.Size(96, 16);
+            this.cb_MacroGroup.TabIndex = 2;
+            this.cb_MacroGroup.Text = "【宏】结构组";
+            this.cb_MacroGroup.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -282,6 +294,7 @@
         private System.Windows.Forms.TextBox tb_mgt;
         private System.Windows.Forms.TextBox tb_Out;
         private System.Windows.Forms.Button Tx;
+        private System.Windows.Forms.CheckBox cb_MacroGroup;
 
     }
 }

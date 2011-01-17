@@ -5488,6 +5488,14 @@ namespace MidasGenModel.model
                 }
             }
             #endregion
+
+            #region 结构组转成CM
+            
+            #endregion
+            #region 刚性连接输出
+            
+            #endregion
+
             #region 荷载输出
             writer.WriteLine("\n!施加模型荷载");
             foreach (BLoadCase lc in this.STLDCASE)
@@ -5740,6 +5748,60 @@ namespace MidasGenModel.model
                 stream.Close();
             }
 
+            return true;
+        }
+
+        /// <summary>
+        /// 写出ansys宏文件
+        /// 功能：将结构组转化为Components
+        /// </summary>
+        /// <param name="dir">宏文件目录</param>
+        /// <returns>是否成功</returns>
+        public bool WriteAnsysComponents(string dir)
+        {
+            string FileName = Path.Combine(dir, "group2cm.mac");
+            using (FileStream stream = File.Open(FileName, FileMode.Create))
+            {
+                StreamWriter writer = new StreamWriter(stream);
+
+                #region 宏文件内容
+                writer.WriteLine("!宏文件功能：将结构组转化为Components");
+                writer.WriteLine("!使用方法:*use,group2cm.mac");
+                writer.WriteLine("/COM,Ansys Mac File Created at " + System.DateTime.Now);
+                writer.WriteLine("/COM,*******http://www.lubanren.com********");
+
+                //writer.WriteLine(System.Environment.NewLine + "!结构组信息");
+                foreach (KeyValuePair<string, BSGroup> sg in this.StruGroups)
+                {
+                    List<int> sg_nodes = sg.Value.NodeList;
+                    List<int> sg_elems = sg.Value.EleList;
+
+                    if (sg_nodes.Count > 0)
+                    {
+                        writer.WriteLine("nsel,none");
+                        foreach (int tt in sg_nodes)
+                        {
+                            writer.WriteLine("nsel,a,node,," + tt.ToString());
+                        }
+                        writer.WriteLine("cm,{0}_n,node", sg.Key);
+                        writer.WriteLine("allsel,all");
+                    }
+
+                    if (sg_elems.Count > 0)
+                    {
+                        writer.WriteLine("esel,none");
+                        foreach (int tt in sg_elems)
+                        {
+                            writer.WriteLine("esel,a,elem,," + tt.ToString());
+                        }
+                        writer.WriteLine("cm,{0}_e,elem", sg.Key);
+                        writer.WriteLine("allsel,all");
+                    }
+                }
+                #endregion
+                writer.Close();
+                stream.Close();
+            }
             return true;
         }
 
