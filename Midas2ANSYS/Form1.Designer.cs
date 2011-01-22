@@ -33,6 +33,7 @@
             this.Tx = new System.Windows.Forms.Button();
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.cb_MacroGroup = new System.Windows.Forms.CheckBox();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.bt_cancle = new System.Windows.Forms.Button();
@@ -45,7 +46,6 @@
             this.label1 = new System.Windows.Forms.Label();
             this.tb_mgt = new System.Windows.Forms.TextBox();
             this.tb_Out = new System.Windows.Forms.TextBox();
-            this.cb_MacroGroup = new System.Windows.Forms.CheckBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -110,6 +110,16 @@
             this.groupBox2.TabIndex = 8;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "输出选项";
+            // 
+            // cb_MacroGroup
+            // 
+            this.cb_MacroGroup.AutoSize = true;
+            this.cb_MacroGroup.Location = new System.Drawing.Point(194, 28);
+            this.cb_MacroGroup.Name = "cb_MacroGroup";
+            this.cb_MacroGroup.Size = new System.Drawing.Size(96, 16);
+            this.cb_MacroGroup.TabIndex = 2;
+            this.cb_MacroGroup.Text = "【宏】结构组";
+            this.cb_MacroGroup.UseVisualStyleBackColor = true;
             // 
             // comboBox1
             // 
@@ -241,16 +251,6 @@
             this.tb_Out.Size = new System.Drawing.Size(454, 125);
             this.tb_Out.TabIndex = 5;
             // 
-            // cb_MacroGroup
-            // 
-            this.cb_MacroGroup.AutoSize = true;
-            this.cb_MacroGroup.Location = new System.Drawing.Point(194, 28);
-            this.cb_MacroGroup.Name = "cb_MacroGroup";
-            this.cb_MacroGroup.Size = new System.Drawing.Size(96, 16);
-            this.cb_MacroGroup.TabIndex = 2;
-            this.cb_MacroGroup.Text = "【宏】结构组";
-            this.cb_MacroGroup.UseVisualStyleBackColor = true;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -262,7 +262,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "Form1";
-            this.Text = "Midas2ANSYS (V1.0.0.52)";
+            this.Text = "Midas2ANSYS (V1.0.0.57)";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);

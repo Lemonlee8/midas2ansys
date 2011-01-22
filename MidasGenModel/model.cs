@@ -3799,6 +3799,13 @@ namespace MidasGenModel.model
         {
             get { return _StruGroups; }
         }
+        /// <summary>
+        /// 刚性连接链表
+        /// </summary>
+        public SortedList<int, BRigidLink> RigidLinks
+        {
+            get { return _RigidLinks; }
+        }
         #endregion
 
         #region 构造函数
@@ -5444,7 +5451,8 @@ namespace MidasGenModel.model
             //进入后处理模块
             writer.WriteLine("\n/SOLU");
             writer.WriteLine("\n!约束条件");
-            #region 边界条件输出
+            #region 一般固定边界输出
+            writer.WriteLine("\n!一般固定边界条件");
             foreach (BConstraint nodesuport in this.constraint)
             {
                 foreach (string nodeslist in nodesuport.node_list)
@@ -5488,12 +5496,47 @@ namespace MidasGenModel.model
                 }
             }
             #endregion
-
-            #region 结构组转成CM
-            
-            #endregion
             #region 刚性连接输出
-            
+            writer.WriteLine("\n!刚性连接（节点耦合）");
+            foreach (KeyValuePair<int, BRigidLink> Rigid in this.RigidLinks)
+            {
+                List<int> RigiNodes = Rigid.Value.SNodesList;//从属节点号
+                RigiNodes.Add(Rigid.Value.MNode);//添加主节点号
+
+                writer.WriteLine("nsel,none");
+                foreach (int nn in RigiNodes)
+                {
+                    writer.WriteLine("nsel,a,node,,{0}",nn.ToString());
+                }
+                writer.WriteLine("cm,cptemp,node");
+                writer.WriteLine("allsel,all");
+                if (Rigid.Value.bUx)
+                {
+                    writer.WriteLine("cp,next,ux,cptemp");
+                }
+                if (Rigid.Value.bUy)
+                {
+                    writer.WriteLine("cp,next,uy,cptemp");
+                }
+                if (Rigid.Value.bUz)
+                {
+                    writer.WriteLine("cp,next,uz,cptemp");
+                }
+                if (Rigid.Value.bRx)
+                {
+                    writer.WriteLine("cp,next,rotx,cptemp");
+                }
+                if (Rigid.Value.bRy)
+                {
+                    writer.WriteLine("cp,next,roty,cptemp");
+                }
+                if (Rigid.Value.bRz)
+                {
+                    writer.WriteLine("cp,next,rotz,cptemp");
+                }
+                writer.WriteLine("cmdele,cptemp");
+            }
+
             #endregion
 
             #region 荷载输出
