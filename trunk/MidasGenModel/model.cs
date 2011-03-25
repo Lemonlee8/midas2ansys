@@ -1337,7 +1337,8 @@ namespace MidasGenModel.model
             foreach (BLoadCase lc in LCs)
             {
                 //当前组合的单元荷载表
-                SortedList<int, BBLoad> CurELoadData = new SortedList<int, BBLoad>();
+                //[2011.03.25]将CurELoadData修改为可重复键值
+                SortedList<int, BBLoad> CurELoadData = new SortedList<int, BBLoad>(new RepeatedKeySort());
 
                 foreach (KeyValuePair<int, BBLoad> ELoad in ELoadData)
                 {
