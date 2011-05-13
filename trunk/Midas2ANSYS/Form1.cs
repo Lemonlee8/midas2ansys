@@ -66,7 +66,7 @@ namespace Midas2ANSYS
                 {
                     if (splitContainer1.Panel2Collapsed)
                         CollapseForm();
-                    tb_Out.AppendText(Environment.NewLine+"恭喜，转换成功完成^_^");
+                    tb_Out.AppendText(Environment.NewLine+"["+System.DateTime.Now.ToString()+"]"+"恭喜，转换成功完成^_^");
                     tb_Out.AppendText(Environment.NewLine+"模型节点数："+modelinfo.nodes.Count.ToString()+
                         "  单元数:"+modelinfo.elements.Count.ToString());
                     tb_Out.AppendText(Environment.NewLine+"inp文件成功保存在："+tb_inp.Text);
@@ -79,6 +79,10 @@ namespace Midas2ANSYS
                     {
                         tb_Out.AppendText(Environment.NewLine + "[宏]结构组信息转化成Components成功!");
                     }
+                }
+                if (comboBox1.SelectedIndex + 1 == 3)
+                {
+                    tb_Out.AppendText(Environment.NewLine+"->所有梁单元按Beam189单元格式进行了数据处理");
                 }
             }
         }
