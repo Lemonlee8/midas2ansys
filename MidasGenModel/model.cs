@@ -3807,6 +3807,17 @@ namespace MidasGenModel.model
         {
             get { return _RigidLinks; }
         }
+
+        /// <summary>
+        /// 模型的最大节点号
+        /// </summary>
+        public int MaxNode
+        {
+            get
+            {                
+                return nodes.Keys[nodes.Keys.Count-1];
+            }
+        }
         #endregion
 
         #region 构造函数
@@ -5399,6 +5410,30 @@ namespace MidasGenModel.model
                 writer.WriteLine("n," + node.Key.ToString("0") + "," + node.Value.X.ToString() + "," + node.Value.Y.ToString() + "," + node.Value.Z
                     .ToString());
             }
+
+            //如果单元选择是Beam189则进行节点数的增加
+            SortedList<int, Bnodes> beam189Mid = new SortedList<int, Bnodes>();//中间节点表
+            if (BeamType == 3)
+            {
+                int maxnode = this.MaxNode;//模型最大节点
+                writer.WriteLine("\n![Beam189单元中间节点信息]");
+                int i=1;
+                foreach (KeyValuePair<int, Element> elem in this.elements)
+                {
+                    if (elem.Value.TYPE != ElemType.BEAM)
+                        continue;
+                    FrameElement bm=elem.Value as FrameElement;
+                    Point3d pt1= nodes[bm.I].Location;
+                    Point3d pt2=nodes[bm.J].Location;
+                    Point3d ptM=Point3d .GetMidPoint(pt1,pt2);
+                    Bnodes midNode=new Bnodes (i+maxnode,ptM.X,ptM.Y,ptM.Z);//中间节点编号
+                    writer.WriteLine("n,{0},{1},{2},{3}",midNode.num,midNode.X,midNode.Y,midNode.Z);
+                    //添加到中间节点表，<单元号，中间节点信息>
+                    beam189Mid.Add(elem.Value.iEL,midNode);
+                    i++;
+                }
+            }
+
             //输出单元信息
             writer.WriteLine("\n!单元数据信息");
             foreach (KeyValuePair<int, Element> elem in this.elements)
@@ -5411,7 +5446,18 @@ namespace MidasGenModel.model
                         writer.WriteLine("mat,{0}", elem.Value.iMAT.ToString());
                         writer.WriteLine("secnum," + elem.Value.iPRO.ToString());
                         writer.WriteLine("real,");
-                        writer.WriteLine("en," + elem.Value.NodeString());
+                        if (BeamType != 3)//如果没有选择Beam189
+                            writer.WriteLine("en," + elem.Value.NodeString());
+                        else
+                        {
+                            int inodes = elem.Value.NodeCount;
+                            string beam189out = "en," + elem.Key.ToString();
+                            beam189out += "," + elem.Value.iNs[0] + "," + elem.Value.iNs[1]; ;
+                            beam189out+=","+beam189Mid[elem.Key].num.ToString();
+                            if (inodes == 3)
+                                beam189out += "," + elem.Value.iNs[2];
+                            writer.WriteLine(beam189out);
+                        }
                         break;
                     case ElemType.TRUSS:
                         writer.WriteLine("type,3");
