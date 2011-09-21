@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Midas2ANSYS</RootNamespace>
     <AssemblyName>Midas2ANSYS</AssemblyName>
-    <ApplicationIcon>logo.ico</ApplicationIcon>
+    <ApplicationIcon>midas2ansys.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -96,7 +96,7 @@
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="logo.ico" />
+    <Content Include="midas2ansys.ico" />
     <Content Include="readme.txt" />
   </ItemGroup>
   <ItemGroup>
